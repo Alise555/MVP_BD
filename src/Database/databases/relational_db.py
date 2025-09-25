@@ -3,7 +3,7 @@ from abstract.base_db import BaseDB
 
 class RelationalDB(BaseDB):
 
-    def create_table(self, table_name: str, table_struct: dict) -> bool|Exception:
+    def create_table(self, table_name: str, table_struct: dict) -> bool | Exception:
         """Создает новую таблицу в базе данных."""
         try:
             self._storage.create_folder(table_name)
@@ -21,7 +21,7 @@ class RelationalDB(BaseDB):
         except Exception as e:
             raise Exception(f"Error describing table {table_name}: {e}")
 
-    def drop_table(self, table_name: str) -> bool:
+    def drop_table(self, table_name: str) -> bool | Exception:
         """Удаляет таблицу из базы данных."""
         try:
             self._storage.delete_data_file(table_name)
