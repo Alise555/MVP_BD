@@ -17,7 +17,7 @@ class DBManager:
         self._databases = set()
         self._current_database = ""
 
-    async def create_database(self, database_name: str, metadata: Dict[str, Any]):
+    def create_database(self, database_name: str, metadata: Dict[str, Any]):
         """Создаёт новую базу данных.
         Args:
             database_name (str): Имя создаваемой базы данных.
@@ -26,8 +26,8 @@ class DBManager:
         if database_name in self._databases:
             return "error"
 
-        result_create_folder = await self._storage.create_folder(database_name)
-        result_create_metadata = await self._storage.create_metadata(metadata)
+        result_create_folder = self._storage.create_folder(database_name)
+        result_create_metadata = self._storage.create_metadata(metadata)
 
         if result_create_folder == "OK" and result_create_metadata == "OK":
             self._databases.add(database_name)
@@ -35,21 +35,21 @@ class DBManager:
         else:
             return "ERROR"
 
-    async def delete_database(self, database_name: str):
+    def delete_database(self, database_name: str):
         """Удаляет базу данных.
         Args:
             database_name (str): Имя удаляемой базы данных.
         """
         if database_name not in self._databases:
             return "error"
-        result_delete_folder = await self._storage.delete_folder(database_name)
+        result_delete_folder = self._storage.delete_folder(database_name)
         if result_delete_folder == "OK":
             self._databases.remove(database_name)
             return "OK"
         else:
             return "ERROR"
 
-    async def rename_database(self, old_database_name: str, new_database_name: str):
+    def rename_database(self, old_database_name: str, new_database_name: str):
         """Переименовывает базу данных.
         Args:
             old_database_name (str): Текущее имя базы данных.
@@ -57,8 +57,8 @@ class DBManager:
         """
         if old_database_name not in self._databases:
             return "error"
-        result_rename_folder = await self._storage.rename_folder(old_database_name, new_database_name)
-        result_update_metadata = await self._storage.update_metadata()
+        result_rename_folder = self._storage.rename_folder(old_database_name, new_database_name)
+        result_update_metadata = self._storage.update_metadata()
         if result_rename_folder == "OK" and result_update_metadata == "OK":
             self._databases.remove(old_database_name)
             self._databases.add(new_database_name)
@@ -77,14 +77,10 @@ class DBManager:
 
     def show_databases(self) -> List[str]:
         """Возвращает список всех баз данных.
-        Returns:
-            List[str]: Список имён баз данных.
         """
         return list(self._databases)
 
     def current_database(self):
         """Возвращает имя текущей активной базы данных.
-        Returns:
-            str: Имя текущей базы данных.
         """
         return self._current_database
