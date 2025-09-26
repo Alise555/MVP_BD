@@ -204,6 +204,10 @@ marimo/_lsp/
 __marimo__/
 
 
+.continue
+.flake8
+research/
+
 # local data 
 
 .postgres_data/

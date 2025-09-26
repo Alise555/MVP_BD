@@ -1,5 +1,6 @@
 import json
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple
+
 
 class Storage:
     """Класс для работы с файловой системой"""
@@ -29,3 +30,26 @@ class Storage:
         """Загружает данные таблицы"""
         # Заглушка - в реальности загрузка из Table_DATA
         return []
+    
+    def insert_in_data_file(self, values: Dict[str, Any]) -> None:
+        print(f"Storage: Вставка данных в таблицу {self.table_name}")
+
+    def get_metadata(self, table_name: str) -> Dict[str, Any]:
+        """Передает структуру таблицы
+        Args:
+            table_name (str): имя таблицы
+        Returns:
+            Dict[str, Any]: струтура таблицы
+        """ 
+        # Заглушка   
+        return {}     
+    
+    def get_from_data_file(self, table_name: str) -> Tuple[Dict[str, Any]]:
+        """Передает данные таблицы
+        Args:
+            table_name (str): имя таблицы
+        Returns:
+            Tuple[Dict[str, Any]]: данные таблицы
+        """ 
+        # Заглушка   
+        return ()
