@@ -1,5 +1,5 @@
 from typing import Any, List, Dict, Optional
-from src.container.container import Container  
+from src.table.container import Container  
 from src.storage.storage import Storage 
 
 class Table(Container):
