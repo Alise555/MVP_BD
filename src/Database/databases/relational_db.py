@@ -6,6 +6,7 @@ class RelationalDB(BaseDB):
     def create_table(self, table_name: str, table_struct: dict) -> bool | Exception:
         """Создает новую таблицу в базе данных."""
         try:
+            # TO DO: переработать логику при создании storage
             self._storage.create_folder(table_name)
             metadata = self._storage.create_metadata(table_struct)
             self._storage.create_data_file(table_name, metadata)
@@ -16,6 +17,7 @@ class RelationalDB(BaseDB):
     def describe_table(self, table_name: str) -> dict:
         """Возвращает структуру таблицы."""
         try:
+            # TO DO: переработать логику при создании storage
             res: dict = self._storage.get_metadata(table_name)
             return res
         except Exception as e:
@@ -24,8 +26,7 @@ class RelationalDB(BaseDB):
     def drop_table(self, table_name: str) -> bool | Exception:
         """Удаляет таблицу из базы данных."""
         try:
-            self._storage.delete_data_file(table_name)
-            self._storage.delete_metadata(table_name)
+            # TO DO: переработать логику при создании storage
             self._storage.delete_folder(table_name)
             return True
         except Exception as e:
@@ -33,6 +34,7 @@ class RelationalDB(BaseDB):
 
     def show_tables(self) -> list[str]:
         """Возвращает список всех таблиц в базе данных."""
+        # TO DO: переработать логику при создании storage
         res: dict = self._storage.get_metadata()
         # Логика какая-то
         tables: list[str] = [res.keys()]
