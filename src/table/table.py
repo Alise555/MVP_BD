@@ -309,11 +309,23 @@ class Table(Container):
         Returns:
             int: Количество удаленных строк
         """
-        delete_rows = 0
         full_data = self.storage.get_from_data_file(table_name)
-        for row in full_data:
+        PydanticModel = create_dynamic_model(conditions=conditions)
 
-        print(f"Удаление данных с условиями: {conditions} (заглушка)")
+        # Фильтруем строки, которые НЕ соответствуют условиям (их оставим)
+        remaining_data = []
+        delete_rows = 0
+
+        for row in full_data:
+            try:
+                PydanticModel(**row)  # Если валидация проходит, строка подлежит удалению
+                delete_rows += 1
+            except Exception:
+                remaining_data.append(row)  # Если не проходит, оставляем
+
+        # Сохраняем оставшиеся данные обратно в хранилище
+        self.storage.update_data_file(remaining_data)
+
         return delete_rows
     
     def show_structure(self) -> None:
