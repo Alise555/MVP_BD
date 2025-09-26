@@ -1,7 +1,6 @@
 from typing import Any, Dict
 from database_api import ApiResult
 from abstract.abstract_data_api import AbstractDataAPI
-from src.enum_status import Status
 
 
 class DataAPI(AbstractDataAPI):
