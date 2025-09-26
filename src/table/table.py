@@ -1,6 +1,12 @@
-from typing import Any, List, Dict, Optional
-from src.container.container import Container  
+from typing import Any, List, Dict, Optional, Type, TypeVar
+from pydantic import BaseModel
+from src.container.container import Container  # Импортируем абстрактный класс
 from src.storage.storage import Storage 
+from models.dynamic_model import create_dynamic_model
+
+
+T = TypeVar("T", bound=BaseModel)
+
 
 class Table(Container):
     """
@@ -89,7 +95,7 @@ class Table(Container):
             return False
     
     def modify_column(self, old_column_name: str, new_column_name: str, 
-                     new_data_type: Optional[str] = None) -> bool:
+                      new_data_type: Optional[str] = None) -> bool:
         """
         Изменить колонку в таблице.
         
@@ -164,35 +170,9 @@ class Table(Container):
         Returns:
             bool: True если успешно, False если ошибка
         """
-        try:
-            # Проверяем существование колонки
-            if column_name not in self.columns_metadata:
-                print(f"Ошибка: Колонка '{column_name}' не существует")
-                return False
-            
-            print(f"Удаление колонки '{column_name}'")
-            
-            # 1. Определяем индекс удаляемой колонки
-            col_index = list(self.columns_metadata.keys()).index(column_name)
-            
-            # 2. Удаляем колонку из метаданных
-            del self.columns_metadata[column_name]
-            
-            # 3. Удаляем соответствующий столбец из каждой строки данных
-            for row in self.data:
-                if len(row) > col_index:
-                    del row[col_index]
-            
-            # 4. Сохраняем изменения через Storage
-            self.storage.update_metadata(self.columns_metadata)
-            self.storage.update_data_file(self.data)
-            
-            print(f"Колонка '{column_name}' успешно удалена")
-            return True
-            
-        except Exception as e:
-            print(f"Ошибка при удалении колонки: {e}")
-            return False
+        # TODO: Реализовать удаление колонки
+        print(f"Удаление колонки '{column_name}' (заглушка)")
+        return True
     
     def _get_default_value(self, data_type: str) -> Any:
         """Возвращает значение по умолчанию для типа данных"""
@@ -216,27 +196,125 @@ class Table(Container):
         if converter:
             return converter(value)
         return value
+
+    def insert(self, table_name: str, values: Dict[str, Any]) -> Dict[str, bool]:
+        """
+        Вставить запись в таблицу.
+        
+        Args:
+            table_name (str): Имя таблицы
+            values (Dict[str, Any]): Список Pydantic-моделей для вставки
+                {имя_колонки: значение}
+                
+        Returns:
+            Dict[str, bool]: True если успешно, False если ошибка
+        """
+        try:
+            table_structure = self.storage.get_metadata(table_name)
+            PydanticModel = create_dynamic_model( field_types=table_structure)
+            object = PydanticModel(**values)
+            self.storage.insert_in_data_file(values)
+            print(f"Вставка данных: {object} (заглушка)")
+            return {"succes": True}
+        except Exception as e:
+            print(f"Error: {e}")
+            return {"succes": False}
+
+    def select(self, table_name: str,
+               columns: Optional[List[str]] = None, 
+               conditions: Optional[Dict[str, Any]] = None) -> Optional[List[Dict[str, Any]]]:
+        """
+        Выбрать данные из таблицы.
+        
+        Args:
+            table_name (str): Имя таблицы
+            columns (List[str], optional): Список колонок для вывода
+            conditions (Dict[str, Any], optional): Условия выборки, например:
+                {
+                    "username": {
+                        "type": str,
+                        "min_length": 3,
+                        "max_length": 20,
+                    },
+                    "age": {
+                        "type": int,
+                        "gt": 0,
+                        "lt": 120
+                    }
+                }
+            
+        Returns:
+            List[Dict[str, Any]]: Список строк, соответствующих условиям
+        """
+        full_data = self.storage.get_from_data_file(table_name)
+        filtered_data = []
+        PydanticModel = create_dynamic_model(conditions=conditions)
+        for row in full_data:
+            try: 
+                PydanticModel(**row)
+                filtered_data.append(row)
+            except Exception:
+                continue
+        if columns:
+            result = []
+            for row in filtered_data:
+                result.append({key: row[key] for key in columns if key in row}) 
+            return result
+        print(f"Выбор колонок: {columns}, условия: {conditions} (заглушка)")
+        return filtered_data
+
+    def update(self, table_name: str,
+               new_data: Dict[str, Any], 
+               conditions: Optional[Dict[str, Any]] = None) -> int:
+        """
+        Обновить данные в таблице.
+        
+        Args:
+            table_name (str): Имя таблицы
+            new_data (Dict[str, Any]): Новые значения
+            conditions (Dict[str, Any], optional): Условия для обновления
+            
+        Returns:
+            int: Количество обновленных строк
+        """
+        updated_rows = 0
+        table_structure = self.storage.get_metadata(table_name)
+        PydanticModel = create_dynamic_model(field_types=table_structure)
+
+        if PydanticModel(**new_data):
+            full_data = self.storage.get_from_data_file(table_name)
+            for row in full_data:
+                # Проверяем, подходит ли строка под условия (если условия есть)
+                match = True
+                if conditions:
+                    match = all(row.get(key) == value for key, value in conditions.items())
+
+                if match and len(full_data) > 1:
+                    row.update(new_data)  # Обновляем только разрешённые поля
+                    updated_rows += 1
+            if updated_rows > 0:
+                self.storage.update_data_file(full_data)
+            print(f"Обновление данных: {new_data}, условия: {conditions} (заглушка)")
+        return updated_rows
     
-    # Остальные методы остаются как заглушки
-    def insert(self, values: Dict[str, Any]) -> bool:
-        """Вставить запись в таблицу."""
-        print(f"Вставка данных: {values} (заглушка)")
-        return True
-    
-    def select(self, columns: List[str] = None, conditions: Dict[str, Any] = None) -> List[Dict[str, Any]]:
-        """Выбрать данные из таблицы."""
-        print(f"Выборка колонок: {columns}, условия: {conditions} (заглушка)")
-        return []
-    
-    def update(self, values: Dict[str, Any], conditions: Dict[str, Any] = None) -> int:
-        """Обновить данные в таблице."""
-        print(f"Обновление данных: {values}, условия: {conditions} (заглушка)")
-        return 0
-    
-    def delete(self, conditions: Dict[str, Any] = None) -> int:
-        """Удалить данные из таблицы."""
+    def delete(self, table_name: str,
+               conditions: Optional[Dict[str, Any]] = None) -> int:
+        """
+        Удалить данные из таблицы.
+        
+        Args:
+            table_name (str): Имя таблицы
+            conditions (Dict[str, Any], optional): Условия для удаления
+            
+        Returns:
+            int: Количество удаленных строк
+        """
+        delete_rows = 0
+        full_data = self.storage.get_from_data_file(table_name)
+        for row in full_data:
+
         print(f"Удаление данных с условиями: {conditions} (заглушка)")
-        return 0
+        return delete_rows
     
     def show_structure(self) -> None:
         """Показать структуру таблицы (для отладки)"""
