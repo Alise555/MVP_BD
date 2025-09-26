@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+#logs
+logs/
+
 # Distribution / packaging
 .Python
 build/
@@ -205,4 +208,11 @@ __marimo__/
 .flake8
 research/
 
+# local data 
 
+.postgres_data/
+.pgadmin_data/
+.nginx_conf/
+data/.example_html/
+data/scratch/
+.~lock.*

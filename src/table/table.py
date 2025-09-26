@@ -1,6 +1,6 @@
 from typing import Any, List, Dict, Optional, Type, TypeVar
 from pydantic import BaseModel
-from src.container.container import Container  # Импортируем абстрактный класс
+from src.table.container import Container  
 from src.storage.storage import Storage 
 from models.dynamic_model import create_dynamic_model
 
@@ -13,18 +13,19 @@ class Table(Container):
     Класс, представляющий таблицу в базе данных.
     """
     
-    def __init__(self, name: str, db_name: str = "default_db"):
+    def __init__(self, name: str, db_name: str = "default_db", storage: Storage = None):
         """
         Инициализация таблицы.
         
         Args:
             name (str): Имя таблицы
             db_name (str): Имя базы данных
+            storage (Storage, optional): Объект хранилища. Если не передан, создается новый.
         """
         super().__init__(name)
         self.name = name
         self.db_name = db_name
-        self.storage = Storage(db_name, name)
+        self.storage = storage if storage is not None else Storage(db_name, name)
         
         # Метаданные: {имя_колонки: тип_данных}
         self.columns_metadata = {}  # Заменяем self.columns
