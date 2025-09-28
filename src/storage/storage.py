@@ -1,25 +1,31 @@
+# Storage.create_folder('new_folder', '')
+
 class Storage:
-    def create_folder(folder_name: str):
+    def create_folder(folder_path: str):
         """
-        Создать папку с названием folder_name
+        Создать папку по пути folder_path
         Args:
-            folder_name(str): название папки
+            folder_path(str): путь к создаваемой папке
         """
+        # if not dbname:
+            
         pass
     
-    def delete_folder(folder_name: str):
+    def delete_folder(folder_path: str):
         """
-        Удалить папку с названием folder_name и все ее содержимое
+        Удалить папку по пути folder_path и все ее содержимое
         Args:
-            folder_name(str): название папки
+            folder_path(str): путь к удаляемой папке
         """
+        # os.rmtree(folder_name+parent_folder)
+        # os.path.join()
         pass
     
-    def rename_folder(folder_name: str, new_name: str):
+    def rename_folder(folder_path: str, new_name: str):
         """
-        Переименовать папку folder_name на new_name
+        Переименовать папку по пути folder_path на new_name
         Args:
-            folder_name(str): старое название папки
+            folder_path(str): путь к папке
             new_name(str): новое название папки
         """
         pass
@@ -69,15 +75,15 @@ class Storage:
         """
         pass
         
-    def delete_data_file(data_file: str):
+    def delete_data_file(data_file_path: str):
         """
         Удалить data_file
         Args:
-            data_file: название к файлу, который удаляем
+            data_file_path: путь к файлу, который удаляем
         """
         pass
         
-    def create_metadata(metadata: dict):
+    def create_metadata(metadata: dict, metadata_file_path: str):
         """
         Создать файл с метаданными
         Args:
@@ -86,27 +92,27 @@ class Storage:
         """
         pass
         
-    def update_metadata(metadata_file: str):
+    def update_metadata(metadata: dict, metadata_file_path: str):
         """
         Обновить файл с метаданными
         Args:
-            metadata_file: название файла, который обновляем
+            metadata_file_path: название файла, который обновляем
         """
         pass
         
-    def get_metadata(metadata_file: str) -> dict:
+    def get_metadata(metadata_file_path: str) -> dict:
         """
         Получить содержимое файла с метаданными
         Args:
-            metadata_file: название файла, который читаем
+            metadata_file_path: путь к файлу с метаданными
         """
         pass
         
-    def delete_metadata(metadata_file: str):
+    def delete_metadata(metadata_file_path: str):
         """
         Удалить файл с метаданными
         Args:
-            metadata_file: название файла, который удаляем
+            metadata_file_path: путь к файлу, который удаляем
         """
         pass
         
