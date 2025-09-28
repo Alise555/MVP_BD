@@ -30,39 +30,38 @@ class Storage:
         """
         pass
     
-    def create_data_file(data_file_name: str, folder: str):
+    # Сигнатура методов, которые работают с data_file изменится, когда я начну их реализовывать!!!!!
+    def create_data_file(data_file_path: str):
         """
         Создать data_file
         Args:
-            datafile_name(str): название data_file
-            folder(str): название папки, в которой создаем data_file
+            data_file_path(str): путь к data_file
         """
         pass
     
-    def insert_in_data_file(data_file: str, content: str):
+    def insert_in_data_file(data_file_path: str, content: str):
         """
         Поместить в data_file новое содержимое content
         Args:
-            data_file(str): название data_file
+            data_file_path(str): путь к data_file
             content(str): содержимое, которое вставляем в data_file
         """
         pass
         
-    def update_data_file(data_file: str, new_content: str, pos: int):
+    def update_data_file(data_file: str, row_structure: str): # пока что стр, потом посмотрим, как лучше передавать
         """
         Обновить в datafile содержимое, находящееся на позиции 
         Args:
             datafile_name(str): название data_file
             new_content(str): новое содержимое, которое попадет в data_file
-            pos(int): позиция обновляемого содержимого в data_file (в байтах)
         """
         pass
         
-    def get_from_data_file(data_file: str):
+    def get_from_data_file(data_file_path: str):
         """
         Получить содержимое data_file
         Args:
-            data_file(str): название data_file
+            data_file_path(str): путь к data_file
         """
         pass
         
