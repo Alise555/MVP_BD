@@ -1,11 +1,8 @@
-from typing import Any, List, Dict, Optional, Type, TypeVar
-from pydantic import BaseModel
+from typing import Any, List, Dict, Optional
 from src.table.container import Container  
 from src.storage.storage import Storage 
 from models.dynamic_model import create_dynamic_model
-
-
-T = TypeVar("T", bound=BaseModel)
+from index.index import Index
 
 
 class Table(Container):
@@ -34,6 +31,7 @@ class Table(Container):
         
         # Загружаем начальные данные
         self._load_initial_data()
+        self.indexes = Index.get_all_indexes()
     
     def _load_initial_data(self):
         """Загрузка начальных данных из Storage"""
@@ -198,12 +196,11 @@ class Table(Container):
             return converter(value)
         return value
 
-    def insert(self, table_name: str, values: Dict[str, Any]) -> Dict[str, bool]:
+    def insert(self, values: Dict[str, Any]) -> Dict[str, bool]:
         """
         Вставить запись в таблицу.
         
         Args:
-            table_name (str): Имя таблицы
             values (Dict[str, Any]): Список Pydantic-моделей для вставки
                 {имя_колонки: значение}
                 
@@ -211,24 +208,23 @@ class Table(Container):
             Dict[str, bool]: True если успешно, False если ошибка
         """
         try:
-            table_structure = self.storage.get_metadata(table_name)
-            PydanticModel = create_dynamic_model( field_types=table_structure)
+            table_structure = self.storage.get_metadata(self.db_name)
+            PydanticModel = create_dynamic_model(field_types=table_structure)
             object = PydanticModel(**values)
             self.storage.insert_in_data_file(values)
             print(f"Вставка данных: {object} (заглушка)")
-            return {"succes": True}
+            return {"success": True}
         except Exception as e:
             print(f"Error: {e}")
-            return {"succes": False}
+            return {"success": False}
 
-    def select(self, table_name: str,
+    def select(self,
                columns: Optional[List[str]] = None, 
                conditions: Optional[Dict[str, Any]] = None) -> Optional[List[Dict[str, Any]]]:
         """
         Выбрать данные из таблицы.
         
         Args:
-            table_name (str): Имя таблицы
             columns (List[str], optional): Список колонок для вывода
             conditions (Dict[str, Any], optional): Условия выборки, например:
                 {
@@ -247,15 +243,16 @@ class Table(Container):
         Returns:
             List[Dict[str, Any]]: Список строк, соответствующих условиям
         """
-        full_data = self.storage.get_from_data_file(table_name)
+        full_data = self.storage.get_from_data_file(self.db_name)
         filtered_data = []
-        PydanticModel = create_dynamic_model(conditions=conditions)
-        for row in full_data:
-            try: 
-                PydanticModel(**row)
-                filtered_data.append(row)
-            except Exception:
-                continue
+        if conditions:
+            PydanticModel = create_dynamic_model(conditions=conditions)
+            for row in full_data:
+                try: 
+                    PydanticModel(**row)
+                    filtered_data.append(row)
+                except Exception:
+                    continue
         if columns:
             result = []
             for row in filtered_data:
@@ -264,14 +261,13 @@ class Table(Container):
         print(f"Выбор колонок: {columns}, условия: {conditions} (заглушка)")
         return filtered_data
 
-    def update(self, table_name: str,
+    def update(self,
                new_data: Dict[str, Any], 
                conditions: Optional[Dict[str, Any]] = None) -> int:
         """
         Обновить данные в таблице.
         
         Args:
-            table_name (str): Имя таблицы
             new_data (Dict[str, Any]): Новые значения
             conditions (Dict[str, Any], optional): Условия для обновления
             
@@ -279,11 +275,11 @@ class Table(Container):
             int: Количество обновленных строк
         """
         updated_rows = 0
-        table_structure = self.storage.get_metadata(table_name)
+        table_structure = self.storage.get_metadata(self.db_name)
         PydanticModel = create_dynamic_model(field_types=table_structure)
 
         if PydanticModel(**new_data):
-            full_data = self.storage.get_from_data_file(table_name)
+            full_data = self.storage.get_from_data_file(self.db_name)
             for row in full_data:
                 # Проверяем, подходит ли строка под условия (если условия есть)
                 match = True
@@ -298,7 +294,7 @@ class Table(Container):
             print(f"Обновление данных: {new_data}, условия: {conditions} (заглушка)")
         return updated_rows
     
-    def delete(self, table_name: str,
+    def delete(self,
                conditions: Optional[Dict[str, Any]] = None) -> int:
         """
         Удалить данные из таблицы.
@@ -310,7 +306,7 @@ class Table(Container):
         Returns:
             int: Количество удаленных строк
         """
-        full_data = self.storage.get_from_data_file(table_name)
+        full_data = self.storage.get_from_data_file(self.db_name)
         PydanticModel = create_dynamic_model(conditions=conditions)
 
         # Фильтруем строки, которые НЕ соответствуют условиям (их оставим)
@@ -338,3 +334,5 @@ class Table(Container):
             print("Первые 3 записи:")
             for i, row in enumerate(self.data[:3]):
                 print(f"  {i}: {row}")
+
+    
