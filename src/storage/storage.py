@@ -37,6 +37,7 @@ class Storage:
         Args:
             data_file_path(str): путь к data_file
         """
+        print("я запушил свою ветку")
         pass
     
     def insert_in_data_file(data_file_path: str, content: str):
