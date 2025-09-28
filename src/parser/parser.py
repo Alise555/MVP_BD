@@ -41,7 +41,6 @@ class Parser:
         user_input = user_input.split(";")
         user_input = [item.strip() for item in user_input if item]
         for item in user_input:
-            print(item)
             try:
                 print(self.parse_command(item))
             except SQLSyntaxError as e:
