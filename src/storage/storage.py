@@ -1,4 +1,5 @@
-# Storage.create_folder('new_folder', '')
+import os
+
 
 class Storage:
     def create_folder(folder_path: str):
