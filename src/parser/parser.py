@@ -41,20 +41,39 @@ class Parser:
         user_input = user_input.split(";")
         user_input = [item.strip() for item in user_input if item]
         for item in user_input:
+            print(item)
             try:
                 print(self.parse_command(item))
             except SQLSyntaxError as e:
                 print(e)
 
-    def parse_command(self, command: str):
+    def parse_command(self, command: str) -> str:
+        """Проверяет, что команда на входе существует, парсит с нее данные и вызывает соответствующий метод TopLevelApi
+
+        Args:
+            command (str): команда для выполнения
+
+        Raises:
+            WrongParametersError: Возникает при подаче лишних или неправильных параметров
+            NotEnoughParametersError: Возникает, когда недостаточно параметров для вызова метода
+            UnknownCommandError: Возникает, когда команду на входе нельзя определить
+
+        Returns:
+            str: Итог выполнения метода
+        """
         for key, value in commands_data.items():
             if key in command:
                 pattern = value.pattern
                 method = value.method
                 if pattern:
-                    result: tuple[str] = re.search(
-                        pattern=pattern, string=command
-                    ).groups()
+                    try:
+                        result: tuple[str] = re.search(
+                            pattern=pattern, string=command
+                        ).groups()
+                    except AttributeError as e:
+                        raise NotEnoughParametersError(
+                            f"Not enough parameters for command\n{value.usage}"
+                        ) from e
                     data = []
                     if result:
                         result = [item for item in result if item]
@@ -90,13 +109,18 @@ class Parser:
                             )
                     return method(self.api, *data)
                 return method(self.api)
-            else:
-                raise UnknownCommandError(
-                    "Unknown command write <help> in this terminal"
-                )
 
-    def parse_tuple_string(self, tuple_string: str):
-        print(tuple_string)
+        raise UnknownCommandError("Unknown command write <help> in this terminal")
+
+    def parse_tuple_string(self, tuple_string: str) -> tuple | list:
+        """Разбивает последовательность данных (<value>, <value>) из str в tuple или list
+
+        Args:
+            tuple_string (str): Строка последовательность
+
+        Returns:
+            tuple | list: Кортеж / список последовательности
+        """
         data = tuple_string
         if data.count("(") > 1 and data.count(")") > 1:
             result = []
@@ -119,7 +143,15 @@ class Parser:
             data = [item.strip() for item in data if item]
             return tuple(data)
 
-    def parse_dict_string(self, dict_string: str):
+    def parse_dict_string(self, dict_string: str) -> dict:
+        """Разбивает строку с последовательностью ключ: значение или ключ=значение на словарь данных
+
+        Args:
+            dict_string (str): Строка последовательность
+
+        Returns:
+            dict: Словарь данных
+        """
         result = {}
         data = dict_string
         if "(" in dict_string and ")" in dict_string:
@@ -145,6 +177,7 @@ class Parser:
         return result
 
     def show_help(self):
+        """Вывод краткой справки"""
         print("Available commands:\n")
         for item in commands_data.keys():
             print(item)

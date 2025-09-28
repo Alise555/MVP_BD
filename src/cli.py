@@ -19,11 +19,11 @@ if __name__ == "__main__":
                 continue
             if user_input != "":
                 command_buffer.append(user_input)
-            elif user_input.endswith(";"):
-                parser.parse_input(command_buffer.copy())
-                command_buffer = []
             if user_input.lower().startswith("exit"):
                 break
+            if user_input[-1] == ";":
+                parser.parse_input(command_buffer.copy())
+                command_buffer = []
         except KeyboardInterrupt:
             print()
             command_buffer = []

@@ -11,7 +11,7 @@ commands_data = {
     "create table": CommandInfo(
         r"create\s+table\s+(\w+)\s*(\((?:\w*\:\s*\w*\,?\s*)*\))",
         TopLevelApi.create_table,
-        USAGE_BASE + "CREATE TABLE <table_name>",
+        USAGE_BASE + "CREATE TABLE <table_name> (<field_name>:<field_type>, ...)",
     ),
     "drop table": CommandInfo(
         r"drop\s+table\s+(\w*)",
