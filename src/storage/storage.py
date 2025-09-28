@@ -77,7 +77,7 @@ class Storage:
         """
         pass
         
-    def create_metadata(metadata_file: str):
+    def create_metadata(metadata: dict):
         """
         Создать файл с метаданными
         Args:
@@ -88,13 +88,13 @@ class Storage:
         
     def update_metadata(metadata_file: str):
         """
-        Удалить файл с метаданными
+        Обновить файл с метаданными
         Args:
             metadata_file: название файла, который обновляем
         """
         pass
         
-    def get_metadata(metadata_file: str):
+    def get_metadata(metadata_file: str) -> dict:
         """
         Получить содержимое файла с метаданными
         Args:
