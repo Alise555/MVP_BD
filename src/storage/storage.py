@@ -1,4 +1,5 @@
 import os
+import json
 
 
 class Storage:
@@ -83,39 +84,56 @@ class Storage:
         """
         pass
         
+    #================================================================================
+
     def create_metadata(metadata: dict, metadata_file_path: str):
         """
-        Создать файл с метаданными
+        Создать файл с метаданными.
+
         Args:
-            metadata_file: название файла, который создаем
-        
+            metadata (dict): Словарь с метаданными.
+            metadata_file_path (str): Путь к файлу с метаданными.
         """
-        pass
+        with open(metadata_file_path, "w") as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=4)
         
     def update_metadata(metadata: dict, metadata_file_path: str):
         """
         Обновить файл с метаданными
+
         Args:
-            metadata_file_path: название файла, который обновляем
+            metadata (dict): Словарь с метаданными.
+            metadata_file_path (str): Путь к файлу с метаданными.
         """
-        pass
+        with open(metadata_file_path, "w") as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=4)
         
     def get_metadata(metadata_file_path: str) -> dict:
         """
-        Получить содержимое файла с метаданными
+        Получить содержимое файла с метаданными.
+
         Args:
-            metadata_file_path: путь к файлу с метаданными
+            metadata_file_path (str): Путь к файлу с метаданными.
+        Returns:
+            metadata (dict): Словарь с метаданными.
         """
-        pass
+        with open(metadata_file_path, "r") as f:
+            metadata = json.load(f)
+
+        return metadata
         
     def delete_metadata(metadata_file_path: str):
         """
         Удалить файл с метаданными
         Args:
-            metadata_file_path: путь к файлу, который удаляем
+            metadata_file_path (str): Путь к удаляемому файлу.
         """
-        pass
         
+        if os.path.exists(metadata_file_path):
+            os.remove(metadata_file_path)
+
+    #================================================================================
+
     def create_index_file(index_file: str, type: str):
         """
         Создать индекс файл
