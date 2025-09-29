@@ -1,32 +1,26 @@
-# Storage.create_folder(self, 'new_folder', '')
-
 class Storage:
     def create_folder(self, folder_path: str):
         """
         Создать папку по пути folder_path
         Args:
-            folder_path(self, str): путь к создаваемой папке
+            folder_path(str): путь к создаваемой папке
         """
-        # if not dbname:
-            
         pass
     
     def delete_folder(self, folder_path: str):
         """
         Удалить папку по пути folder_path и все ее содержимое
         Args:
-            folder_path(self, str): путь к удаляемой папке
+            folder_path(str): путь к удаляемой папке
         """
-        # os.rmtree(self, folder_name+parent_folder)
-        # os.path.join(self, )
         pass
     
     def rename_folder(self, folder_path: str, new_name: str):
         """
         Переименовать папку по пути folder_path на new_name
         Args:
-            folder_path(self, str): путь к папке
-            new_name(self, str): новое название папки
+            folder_path(str): путь к папке
+            new_name(str): новое название папки
         """
         pass
     
@@ -35,7 +29,7 @@ class Storage:
         """
         Создать data_file
         Args:
-            data_file_path(self, str): путь к data_file
+            data_file_path(str): путь к data_file
         """
         pass
     
@@ -43,8 +37,8 @@ class Storage:
         """
         Поместить в data_file новое содержимое content (self, вставляем данные в конец data_file)
         Args:
-            data_file_path(self, str): путь к data_file
-            content(self, str): содержимое, которое вставляем в data_file
+            data_file_path(str): путь к data_file
+            content(str): содержимое, которое вставляем в data_file
         """
         pass
         
@@ -52,8 +46,8 @@ class Storage:
         """
         Перезаписать содержимое data_file новым содержимым new_content
         Args:
-            datafile_name(self, str): путь к обновляемому data_file
-            new_content(self, str): новое содержимое, которое попадет перезапишет data_file
+            datafile_name(str): путь к обновляемому data_file
+            new_content(str): новое содержимое, которое попадет перезапишет data_file
         """
         pass
         
@@ -61,7 +55,7 @@ class Storage:
         """
         Получить содержимое data_file
         Args:
-            data_file_path(self, str): путь к data_file
+            data_file_path(str): путь к data_file
         """
         pass
         
@@ -69,7 +63,7 @@ class Storage:
         """
         Удалить data_file
         Args:
-            data_file_path: путь к файлу, который удаляем
+            data_file_path(str): путь к файлу, который удаляем
         """
         pass
         
@@ -77,7 +71,7 @@ class Storage:
         """
         Создать файл с метаданными
         Args:
-            metadata_file: название файла, который создаем
+            metadata_file(str): название файла, который создаем
         
         """
         pass
@@ -86,7 +80,7 @@ class Storage:
         """
         Обновить файл с метаданными
         Args:
-            metadata_file_path: название файла, который обновляем
+            metadata_file_path(str): название файла, который обновляем
         """
         pass
         
@@ -94,7 +88,7 @@ class Storage:
         """
         Получить содержимое файла с метаданными
         Args:
-            metadata_file_path: путь к файлу с метаданными
+            metadata_file_path(str): путь к файлу с метаданными
         """
         pass
         
@@ -102,7 +96,7 @@ class Storage:
         """
         Удалить файл с метаданными
         Args:
-            metadata_file_path: путь к файлу, который удаляем
+            metadata_file_path(str): путь к файлу, который удаляем
         """
         pass
         
@@ -110,7 +104,7 @@ class Storage:
         """
         Создать индекс файл
         Args:
-            index_file: название файла, который создаем
+            index_file(str): название файла, который создаем
         """
         pass
         
@@ -118,7 +112,7 @@ class Storage:
         """
         Получить содержимое файла с метаданными
         Args:
-            index_file: название файла, который удаляем
+            index_file(str): название файла, который удаляем
         """
         pass
         
@@ -126,7 +120,7 @@ class Storage:
         """
         Удалить файл с метаданными
         Args:
-            index_file: название файла, который обновляем
+            index_file(str): название файла, который обновляем
         """
         pass
         
