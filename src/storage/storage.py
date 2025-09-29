@@ -1,3 +1,5 @@
+from typing import Tuple, Dict, Any, List
+
 class Storage:
     def create_folder(self, folder_path: str):
         """
@@ -24,7 +26,6 @@ class Storage:
         """
         pass
     
-    # Сигнатура методов, которые работают с data_file изменится, когда я начну их реализовывать!!!!!
     def create_data_file(self, data_file_path: str):
         """
         Создать data_file
@@ -33,7 +34,7 @@ class Storage:
         """
         pass
     
-    def insert_in_data_file(self, data_file_path: str, content: str):
+    def insert_in_data_file(self, data_file_path: str, content: Dict[str, Any]):
         """
         Поместить в data_file новое содержимое content (self, вставляем данные в конец data_file)
         Args:
@@ -42,7 +43,7 @@ class Storage:
         """
         pass
         
-    def update_data_file(self, data_file_path: str, new_content: str): # пока что стр, потом посмотрим, как лучше передавать
+    def update_data_file(self, data_file_path: str, new_content: List[List[Any]]):
         """
         Перезаписать содержимое data_file новым содержимым new_content
         Args:
@@ -51,7 +52,7 @@ class Storage:
         """
         pass
         
-    def get_from_data_file(self, data_file_path: str):
+    def get_from_data_file(self, data_file_path: str) -> List[List[Any]]:
         """
         Получить содержимое data_file
         Args:
