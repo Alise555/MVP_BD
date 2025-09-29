@@ -1,78 +1,93 @@
-# Storage.create_folder(self, 'new_folder', '')
+import os
+from typing import Tuple, Dict, Any, List
+import json
+import pickle
 
 class Storage:
     def create_folder(self, folder_path: str):
         """
         Создать папку по пути folder_path
         Args:
-            folder_path(self, str): путь к создаваемой папке
+            folder_path(str): путь к создаваемой папке
         """
-        # if not dbname:
-            
         pass
     
     def delete_folder(self, folder_path: str):
         """
         Удалить папку по пути folder_path и все ее содержимое
         Args:
-            folder_path(self, str): путь к удаляемой папке
+            folder_path(str): путь к удаляемой папке
         """
-        # os.rmtree(self, folder_name+parent_folder)
-        # os.path.join(self, )
         pass
     
     def rename_folder(self, folder_path: str, new_name: str):
         """
         Переименовать папку по пути folder_path на new_name
         Args:
-            folder_path(self, str): путь к папке
-            new_name(self, str): новое название папки
+            folder_path(str): путь к папке
+            new_name(str): новое название папки
         """
         pass
     
-    # Сигнатура методов, которые работают с data_file изменится, когда я начну их реализовывать!!!!!
     def create_data_file(self, data_file_path: str):
         """
         Создать data_file
         Args:
-            data_file_path(self, str): путь к data_file
+            data_file_path(str): путь к data_file
         """
-        print("я запушил свою ветку")
-        pass
+        if os.path.exists(data_file_path):
+            return 
+        with open(data_file_path, 'w'):
+            pass
     
-    def insert_in_data_file(self, data_file_path: str, content: str):
+    def insert_in_data_file(self, data_file_path: str, content: Dict[str, Any]):
         """
-        Поместить в data_file новое содержимое content (self, вставляем данные в конец data_file)
+        Поместить в data_file новое содержимое content (вставляем данные в конец data_file)
         Args:
-            data_file_path(self, str): путь к data_file
-            content(self, str): содержимое, которое вставляем в data_file
+            data_file_path(str): путь к data_file
+            content(str): содержимое, которое вставляем в data_file
         """
-        pass
-        
-    def update_data_file(self, data_file_path: str, new_content: str): # пока что стр, потом посмотрим, как лучше передавать
+        with open(data_file_path, 'ab') as f:
+            to_dump = list(content.values())
+            pickle.dump(to_dump, f)
+            
+    def update_data_file(self, data_file_path: str, new_content: List[List[Any]]):
         """
         Перезаписать содержимое data_file новым содержимым new_content
         Args:
-            datafile_name(self, str): путь к обновляемому data_file
-            new_content(self, str): новое содержимое, которое попадет перезапишет data_file
+            data_file_path(str): путь к обновляемому data_file
+            new_content(str): новое содержимое, которое попадет перезапишет data_file
         """
-        pass
+        with open(data_file_path, 'wb') as f:
+            for row in new_content:
+                pickle.dump(row, f)
         
-    def get_from_data_file(self, data_file_path: str):
+    def get_from_data_file(self, data_file_path: str) -> Dict[str, Any]:
         """
         Получить содержимое data_file
         Args:
-            data_file_path(self, str): путь к data_file
+            data_file_path(str): путь к data_file
         """
-        pass
-        
+        # pickle для каждого insert создает новую pickle-последовательность. поэтому либо здесь код будет раздутый,
+        # либо в insert придется каждый раз заново файл читать. пока что так оставим (хотя меня бесит что нужно лишние байты хранить)
+        rows = []
+        with open(data_file_path, 'rb') as f:
+            try:
+                while True:
+                    row = pickle.load(f)
+                    rows.append(row)
+            except EOFError:
+                pass
+        return rows
+    
     def delete_data_file(self, data_file_path: str):
         """
         Удалить data_file
         Args:
             data_file_path: путь к файлу, который удаляем
         """
-        pass
+        if os.path.exists(data_file_path):
+            os.remove(data_file_path)
         
     def create_metadata(self, metadata: dict, metadata_file_path: str):
         """
@@ -131,3 +146,10 @@ class Storage:
         """
         pass
         
+if __name__ == '__main__':
+    storage = Storage()
+    
+    storage.update_data_file('databases/db1/table1/data.bin', [['val1', 'adsf']])
+    storage.insert_in_data_file('databases/db1/table1/data.bin', {'field1' : 'val1', 'field2': 'adsf'})
+    a = storage.get_from_data_file('databases/db1/table1/data.bin')
+    print(a)
