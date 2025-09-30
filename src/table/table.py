@@ -1,8 +1,9 @@
 from typing import Any, List, Dict, Optional
 from src.table.container import Container  
 from src.storage.storage import Storage 
-from models.dynamic_model import create_dynamic_model
-from index.index import Index
+from src.models.dynamic_model import create_dynamic_model
+from src.config import Config
+# from src.index.index import Index
 
 
 class Table(Container):
@@ -31,7 +32,10 @@ class Table(Container):
         
         # Загружаем начальные данные
         self._load_initial_data()
-        self.indexes = Index.get_all_indexes()
+        # self.indexes = Index.get_all_indexes()
+        config = Config()
+        self.data_file_path = config.data_file_path
+        self.metadata_file_path = config.metadata_file_path
     
     def _load_initial_data(self):
         """Загрузка начальных данных из Storage"""
@@ -208,10 +212,10 @@ class Table(Container):
             Dict[str, bool]: True если успешно, False если ошибка
         """
         try:
-            table_structure = self.storage.get_metadata(self.db_name)
-            PydanticModel = create_dynamic_model(field_types=table_structure)
+            table_structure = self.storage.get_metadata(self.metadata_file_path)
+            PydanticModel = create_dynamic_model(conditions=table_structure)
             object = PydanticModel(**values)
-            self.storage.insert_in_data_file(values)
+            self.storage.insert_in_data_file(self.data_file_path, values)
             print(f"Вставка данных: {object} (заглушка)")
             return {"success": True}
         except Exception as e:
@@ -243,7 +247,7 @@ class Table(Container):
         Returns:
             List[Dict[str, Any]]: Список строк, соответствующих условиям
         """
-        full_data = self.storage.get_from_data_file(self.db_name)
+        full_data = self.storage.get_from_data_file(self.data_file_path)
         filtered_data = []
         if conditions:
             PydanticModel = create_dynamic_model(conditions=conditions)
@@ -275,11 +279,11 @@ class Table(Container):
             int: Количество обновленных строк
         """
         updated_rows = 0
-        table_structure = self.storage.get_metadata(self.db_name)
-        PydanticModel = create_dynamic_model(field_types=table_structure)
+        table_structure = self.storage.get_metadata(self.metadata_file_path)
+        PydanticModel = create_dynamic_model(conditions=table_structure)
 
         if PydanticModel(**new_data):
-            full_data = self.storage.get_from_data_file(self.db_name)
+            full_data = self.storage.get_from_data_file(self.data_file_path)
             for row in full_data:
                 # Проверяем, подходит ли строка под условия (если условия есть)
                 match = True
@@ -290,23 +294,23 @@ class Table(Container):
                     row.update(new_data)  # Обновляем только разрешённые поля
                     updated_rows += 1
             if updated_rows > 0:
-                self.storage.update_data_file(full_data)
+                self.storage.update_data_file(self.data_file_path, full_data)
             print(f"Обновление данных: {new_data}, условия: {conditions} (заглушка)")
         return updated_rows
     
     def delete(self,
-               conditions: Optional[Dict[str, Any]] = None) -> int:
+               conditions: Dict[str, Any]) -> int:
         """
         Удалить данные из таблицы.
         
         Args:
             table_name (str): Имя таблицы
-            conditions (Dict[str, Any], optional): Условия для удаления
+            conditions (Dict[str, Any]): Условия для удаления
             
         Returns:
             int: Количество удаленных строк
         """
-        full_data = self.storage.get_from_data_file(self.db_name)
+        full_data = self.storage.get_from_data_file(self.data_file_path)
         PydanticModel = create_dynamic_model(conditions=conditions)
 
         # Фильтруем строки, которые НЕ соответствуют условиям (их оставим)
@@ -321,7 +325,7 @@ class Table(Container):
                 remaining_data.append(row)  # Если не проходит, оставляем
 
         # Сохраняем оставшиеся данные обратно в хранилище
-        self.storage.update_data_file(remaining_data)
+        self.storage.update_data_file(self.data_file_path, tuple(remaining_data))
 
         return delete_rows
     

@@ -15,7 +15,7 @@ class Storage:
         print(f"Метаданные: {metadata}")
         # Реальная логика записи в Table_INFO
     
-    def update_data_file(self, data: List[List[Any]]) -> None:
+    def update_data_file(self, data_file_path: str, data: Tuple[Dict[str, Any]]) -> None:
         """Обновляет файл с данными таблицы (Table_DATA)"""
         print(f"Storage: Обновление данных для таблицы {self.table_name}")
         print(f"Количество записей: {len(data)}")
@@ -31,7 +31,7 @@ class Storage:
         # Заглушка - в реальности загрузка из Table_DATA
         return []
     
-    def insert_in_data_file(self, values: Dict[str, Any]) -> None:
+    def insert_in_data_file(self, data_file_path: str, values: Dict[str, Any]) -> None:
         print(f"Storage: Вставка данных в таблицу {self.table_name}")
 
     def get_metadata(self, table_name: str) -> Dict[str, Any]:
@@ -52,4 +52,4 @@ class Storage:
             Tuple[Dict[str, Any]]: данные таблицы
         """ 
         # Заглушка   
-        return ()
+        return tuple()
