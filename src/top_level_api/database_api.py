@@ -18,13 +18,31 @@ class DatabaseAPI(AbstractDatabaseAPI):
         self.database = database
 
     def create_table(self, table_name:str, table_struct:dict) -> ApiResult:
-        return self.database.create_table(table_name, table_struct)
+        """Создаёт таблицу."""
+        try:
+            return self.database.create_table(table_name, table_struct)
+        except Exception as e:
+            return ApiResult(status=Status.ERROR, message=f"Ошибка при создании таблицы: {str(e)}")
     
     def describe_table(self, table_name: str) -> Dict[str, Any]:
-        return self.database.describe_table(table_name)
+        """Возвращает структуру таблицы."""
+        try:
+            result = self.database.describe_table(table_name)
+            return result if result is not None else {}
+        except Exception as e:
+            return ApiResult(status=Status.ERROR, message=f"Ошибка в структуре таблицы: {str(e)}")
     
     def drop_table(self, table_name: str) -> ApiResult:
-        return self.database.drop_table(table_name)
+        """Удаляет таблицу."""
+        try:
+            return self.database.drop_table(table_name)
+        except Exception as e:
+            return ApiResult(status=Status.ERROR, message=f"Ошибка при удалении таблицы: {str(e)}")
     
     def show_tables(self) -> List[str]:
-        return self.database.show_tables()
+        """Возвращает список имён таблиц."""
+        try:
+            result = self.database.show_tables()
+            return result if result is not None else []
+        except Exception as e:
+            return ApiResult(status=Status.ERROR, message=f"Ошибка в возврате списка таблиц: {str(e)}")

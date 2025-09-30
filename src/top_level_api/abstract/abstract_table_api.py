@@ -21,7 +21,7 @@ class AbstractTableAPI(ABC):
         pass
     
     @abstractmethod
-    def create_index(self, index_name: str, index_sturct:dict):
+    def create_index(self, index_name: str, index_struct:dict):
         """Создает индекс для таблицы."""
         pass
 
