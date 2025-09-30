@@ -1,13 +1,18 @@
 from enum import Enum
-from collections import namedtuple
+from typing import NamedTuple
+from typing import Callable
 from mock.top_level_api import TopLevelApi
 
 
-CommandInfo = namedtuple("CommandInfo", ["pattern", "method", "usage"])
+class CommandInfo(NamedTuple):
+    pattern: str
+    method: Callable
+    usage: str
+
 
 USAGE_BASE = "Usage: "
 
-commands_data = {
+commands_data: dict[str, CommandInfo] = {
     "create table": CommandInfo(
         r"create\s+table\s+(\w+)\s*(\((?:\w*\:\s*\w*\,?\s*)*\))",
         TopLevelApi.create_table,
@@ -55,20 +60,20 @@ commands_data = {
         None, TopLevelApi.show_databases, USAGE_BASE + "SHOW DATABASES <db_name>"
     ),
     "add column": CommandInfo(
-        r"alter\s+table\s+add\s+column\s+(\w*\s*:\s*\w*)",
+        r"alter\s+table\s+(\w*)\s+add\s+column\s+(\w*\s*:\s*\w*)",
         TopLevelApi.add_column,
-        USAGE_BASE + "ALTER TABLE ADD COLUMN <column_name>:<column_type>",
+        USAGE_BASE + "ALTER TABLE <table_name> ADD COLUMN <column_name>:<column_type>",
     ),
     "drop column": CommandInfo(
-        r"alter\s+table\s+drop\s+column\s+(\w*)",
+        r"alter\s+table\s+(\w*)\s+drop\s+column\s+(\w*)",
         TopLevelApi.drop_column,
-        USAGE_BASE + "ALTER TABLE DROP COLUMN <column_name>",
+        USAGE_BASE + "ALTER TABLE <table_name> DROP COLUMN <column_name>",
     ),
     "modify column": CommandInfo(
-        r"alter\s+table\s+modify\s+column\s+(\w*)\s+(\w*\s*:\s*\w*)",
+        r"alter\s+table\s+(\w*)\s+modify\s+column\s+(\w*)\s+(\w*\s*:\s*\w*)",
         TopLevelApi.modify_column,
         USAGE_BASE
-        + "ALTER TABLE MODIFY COLUMN <old_column_name> <new_column_name>:<new_column_type>",
+        + "ALTER TABLE <table_name> MODIFY COLUMN <old_column_name> <new_column_name>:<new_column_type>",
     ),
     "update": CommandInfo(
         r"update\s*(\w+)\s*set\s*(\w+=\w+(?:\,{1}\s*\w+\s*=\s*\w+|\d+)*)(?:\s*where\s*(\w+[!=><]+\w+|\d+))?",

@@ -1,7 +1,7 @@
-from parser.parser import Parser
+from parser.parser import Parser  # pragma: no cover
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     db_name = "test_db"
     command_buffer = []
     parser = Parser()
