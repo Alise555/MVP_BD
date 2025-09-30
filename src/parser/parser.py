@@ -1,7 +1,8 @@
+from typing import Any
+from typing import Callable
 import re
 
 from exceptions.SQLSyntaxError import (
-    NotEnoughParametersError,
     WrongParametersError,
     UnknownCommandError,
     SQLSyntaxError,
@@ -17,7 +18,7 @@ class Parser:
     def __init__(self):
         self.api = TopLevelApi()
 
-    def parse_input(self, user_input: list[str]) -> None:
+    def parse_input(self, user_input: list[str]) -> None:  # pragma: no cover
         """Принимает ввод от пользователя и разбивает одну большую команду на под-команды и выполняет каждую команду последовательно
         Например:
 
@@ -42,11 +43,11 @@ class Parser:
         user_input = [item.strip() for item in user_input if item]
         for item in user_input:
             try:
-                print(self.parse_command(item))
+                print(self._parse_command(item))
             except SQLSyntaxError as e:
                 print(e)
 
-    def parse_command(self, command: str) -> str:
+    def _parse_command(self, command: str) -> str:
         """Проверяет, что команда на входе существует, парсит с нее данные и вызывает соответствующий метод TopLevelApi
 
         Args:
@@ -54,7 +55,6 @@ class Parser:
 
         Raises:
             WrongParametersError: Возникает при подаче лишних или неправильных параметров
-            NotEnoughParametersError: Возникает, когда недостаточно параметров для вызова метода
             UnknownCommandError: Возникает, когда команду на входе нельзя определить
 
         Returns:
@@ -62,121 +62,133 @@ class Parser:
         """
         for key, value in commands_data.items():
             if key in command:
-                pattern = value.pattern
-                method = value.method
-                if pattern:
-                    try:
-                        result: tuple[str] = re.search(
-                            pattern=pattern, string=command
-                        ).groups()
-                    except AttributeError as e:
-                        raise NotEnoughParametersError(
-                            f"Not enough parameters for command\n{value.usage}"
-                        ) from e
-                    data = []
-                    if result:
-                        result = [item for item in result if item]
-                    match = re.fullmatch(pattern=pattern, string=command)
+                method_fields = value.method.__annotations__
+                method_fields.pop("return", 0)
+                values = None
+                if value.pattern is None:
+                    return value.method(self.api)
+                else:
+                    values = []
+                    match = re.fullmatch(pattern=value.pattern, string=command)
                     if match:
-                        for item in result:
-                            if (
-                                item.startswith("(")
-                                and item.endswith(")")
-                                or "," in item
-                                or "and" in item
-                            ):
-                                if ":" in item or "and" not in item and "=" in item:
-                                    data.append(self.parse_dict_string(item))
-                                else:
-                                    data.append(self.parse_tuple_string(item))
-                            else:
-                                if ("=" in item and "==" not in item) or (":" in item):
-                                    data.append(self.parse_dict_string(item))
-                                elif "==" in item:
-                                    data.append((item,))
-                                else:
-                                    data.append(item)
+                        groups = match.groups()
                     else:
                         raise WrongParametersError(
-                            f"Unknown parameters in command\n{value.usage}"
+                            f"Wrong parameters with this command\n{value.usage}"
                         )
-                if pattern:
-                    for item in data:
-                        if item is None:
-                            raise NotEnoughParametersError(
-                                "Not enough parameters for this command"
+                    for field_value, field_type in zip(groups, method_fields.values()):
+                        values.append(
+                            self._parse_field(
+                                field_value=field_value, field_type=field_type
                             )
-                    return method(self.api, *data)
-                return method(self.api)
+                        )
+                    return value.method(self.api, *values)
+        raise UnknownCommandError("Unknown command\nUse help command in this terminal")
 
-        raise UnknownCommandError("Unknown command write <help> in this terminal")
-
-    def parse_tuple_string(self, tuple_string: str) -> tuple | list:
-        """Разбивает последовательность данных (<value>, <value>) из str в tuple или list
+    def _parse_field(
+        self, field_value: str, field_type: type
+    ) -> tuple | list | dict | str:
+        """В зависимости от типа данных, вызывает определенную функцию для парсинга строку с данными
 
         Args:
-            tuple_string (str): Строка последовательность
+            field_value (str): Строка с данными
+            field_type (type): В какой тип данных должно превратиться поле field_value
 
         Returns:
-            tuple | list: Кортеж / список последовательности
+            tuple | list | dict | str: Извлеченная структура данных
         """
-        data = tuple_string
-        if data.count("(") > 1 and data.count(")") > 1:
-            result = []
-            pattern = r"\(([^()]*)\)"
-            data = re.findall(pattern, data)
-            for item in data:
-                new_data = item.split(",")
-                new_data = [item.strip() for item in new_data]
-                result_tuple = tuple(new_data)
-                result.append(result_tuple)
-            return result
+        method = parse_types.get(field_type, None)
+        if method:
+            return method(field_value)
         else:
-            if "(" in tuple_string and ")" in tuple_string:
-                data = data[1:-1]
-            if "," in data:
-                delimeter = ","
+            return field_value
+
+
+def _parse_tuple_string(tuple_string: str) -> tuple:
+    """Разбивает строку с последовательностью на кортеж данных последовательности
+
+    Args:
+        tuple_string (str): Входная строка для обработки
+
+    Returns:
+        tuple: Кортеж с извлеченными данными
+    """
+    if tuple_string is None:
+        return None
+    if tuple_string.startswith("(") and tuple_string.endswith(")"):
+        tuple_string = tuple_string[1:-1]
+    result = tuple_string
+    delimeters = [",", "and"]
+    for delimeter in delimeters:
+        if delimeter in tuple_string:
+            result = tuple_string.split(delimeter)
+            result = [item.strip() for item in result if item]
+    return (result,)
+
+
+def _parse_dict_string(dict_string: str) -> dict:
+    """Разбивает строку с указанием данных на словарь данных
+
+    Args:
+        dict_string (str): Строка с данными
+
+    Returns:
+        dict: Словарь данных
+    """
+    if dict_string.startswith("(") and dict_string.endswith(")"):
+        dict_string = dict_string[1:-1]
+    delimeters = [":", "="]
+    result = {}
+    for delimeter in delimeters:
+        if delimeter in dict_string:
+            if "," in dict_string:
+                data = dict_string.split(",")
             else:
-                delimeter = "and"
-            data = data.split(delimeter)
-            data = [item.strip() for item in data if item]
-            return tuple(data)
-
-    def parse_dict_string(self, dict_string: str) -> dict:
-        """Разбивает строку с последовательностью ключ: значение или ключ=значение на словарь данных
-
-        Args:
-            dict_string (str): Строка последовательность
-
-        Returns:
-            dict: Словарь данных
-        """
-        result = {}
-        data = dict_string
-        if "(" in dict_string and ")" in dict_string:
-            data = dict_string[1:-1]
-        if "," in data:
-            data = data.split(",")
-            data = [item.strip() for item in data]
-        else:
-            data = [data]
-        for item in data:
-            temp = []
-            if ":" in item:
-                temp = item.split(":")
-            elif "=" in item:
-                temp = item.split("=")
-            if len(temp) == 2:
-                key = temp[0].strip()
-                if temp[1].strip().upper() in TypesEnum._member_names_:
-                    value = TypesEnum[temp[1].strip().upper()].value
-                else:
-                    value = temp[1].strip()
+                data = [dict_string]
+            for item in data:
+                pair = item.split(delimeter)
+                pair = [item.strip() for item in pair if item]
+                key = pair[0]
+                value = pair[1]
+                if delimeter == ":" and pair[1].upper() in TypesEnum._member_names_:
+                    value = TypesEnum[value.upper()].value
                 result[key] = value
-        return result
+    return result
 
-    def show_help(self):
-        """Вывод краткой справки"""
-        print("Available commands:\n")
-        for item in commands_data.keys():
-            print(item)
+
+def _parse_list_string(list_string: str) -> list:
+    """Используется, чтобы обработать строку
+    Если в ней есть большая последовательность сгруппированных данных
+
+    Args:
+        list_string (str): Строка с данными
+
+    Returns:
+        list: Список элементов
+    """
+    result = []
+    pattern = r"(\w+\,?\s*\w*)"
+    groups = re.findall(pattern=pattern, string=list_string)
+    for item in groups:
+        if "," in item:
+            data = item.split(",")
+            data = tuple([item.strip() for item in data if item])
+        else:
+            data = (item,)
+        result.append(data)
+    return result
+
+
+def show_help():  # pragma: no cover
+    """Вывод краткой справки"""
+    print("Available commands:\n")
+    for item in commands_data.keys():
+        print(item)
+
+
+parse_types: dict[type, Callable] = {
+    str: None,
+    dict: _parse_dict_string,
+    list: _parse_list_string,
+    tuple: _parse_tuple_string,
+}
