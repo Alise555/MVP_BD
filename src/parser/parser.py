@@ -7,16 +7,27 @@ from exceptions.SQLSyntaxError import (
     UnknownCommandError,
     SQLSyntaxError,
 )
-from parser.constants import TopLevelApi, commands_data, TypesEnum
+from parser.constants import (
+    DataAPI,
+    DBAPI,
+    DatabaseAPI,
+    TableAPI,
+    commands_data,
+    TypesEnum,
+)
 
 
 class Parser:
     commands = {}
 
-    api: TopLevelApi
-
     def __init__(self):
-        self.api = TopLevelApi()
+        self.objects = {
+            "DataAPI": DataAPI(),
+            "DatabaseAPI": DatabaseAPI(),
+            "TableApi": TableAPI(),
+            "DBAPI": DBAPI(),
+        }
+        print(self.objects)
 
     def parse_input(self, user_input: list[str]) -> None:  # pragma: no cover
         """Принимает ввод от пользователя и разбивает одну большую команду на под-команды и выполняет каждую команду последовательно
@@ -66,7 +77,7 @@ class Parser:
                 method_fields.pop("return", 0)
                 values = None
                 if value.pattern is None:
-                    return value.method(self.api)
+                    return value.method(self._find_api_obj(value.method))
                 else:
                     values = []
                     match = re.fullmatch(pattern=value.pattern, string=command)
@@ -82,8 +93,15 @@ class Parser:
                                 field_value=field_value, field_type=field_type
                             )
                         )
-                    return value.method(self.api, *values)
+                    return value.method(self._find_api_obj(value.method), *values)
         raise UnknownCommandError("Unknown command\nUse help command in this terminal")
+
+    def _find_api_obj(
+        self, method: Callable
+    ) -> DBAPI | DatabaseAPI | DataAPI | TableAPI:
+        method_class = method.__qualname__.split(".")[0]
+        if self.objects.get(method_class, None):
+            return self.objects.get(method_class)
 
     def _parse_field(
         self, field_value: str, field_type: type
