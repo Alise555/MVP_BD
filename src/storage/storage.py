@@ -1,6 +1,6 @@
 import os
 import json
-
+from typing import Tuple, Dict, Any, List
 
 class Storage:
     def create_folder(self, folder_path: str):
@@ -9,8 +9,6 @@ class Storage:
         Args:
             folder_path(str): путь к создаваемой папке
         """
-        # if not dbname:
-            
         pass
     
     def delete_folder(self, folder_path: str):
@@ -19,8 +17,6 @@ class Storage:
         Args:
             folder_path(str): путь к удаляемой папке
         """
-        # os.rmtree(folder_name+parent_folder)
-        # os.path.join()
         pass
     
     def rename_folder(self, folder_path: str, new_name: str):
@@ -32,7 +28,6 @@ class Storage:
         """
         pass
     
-    # Сигнатура методов, которые работают с data_file изменится, когда я начну их реализовывать!!!!!
     def create_data_file(self, data_file_path: str):
         """
         Создать data_file
@@ -41,25 +36,28 @@ class Storage:
         """
         pass
     
-    def insert_in_data_file(self, data_file_path: str, content: str):
+
+    def insert_in_data_file(self, data_file_path: str, content: Dict[str, Any]):
         """
-        Поместить в data_file новое содержимое content
+        Поместить в data_file новое содержимое content (self, вставляем данные в конец data_file)
         Args:
             data_file_path(str): путь к data_file
             content(str): содержимое, которое вставляем в data_file
         """
         pass
         
-    def update_data_file(self, data_file: str, row_structure: str): # пока что стр, потом посмотрим, как лучше передавать
+
+    def update_data_file(self, data_file_path: str, new_content: List[List[Any]]):
         """
-        Обновить в datafile содержимое, находящееся на позиции 
+        Перезаписать содержимое data_file новым содержимым new_content
         Args:
-            datafile_name(str): название data_file
-            new_content(str): новое содержимое, которое попадет в data_file
+            datafile_name(str): путь к обновляемому data_file
+            new_content(str): новое содержимое, которое попадет перезапишет data_file
         """
         pass
         
-    def get_from_data_file(self, data_file_path: str):
+
+    def get_from_data_file(self, data_file_path: str) -> List[List[Any]]:
         """
         Получить содержимое data_file
         Args:
@@ -67,25 +65,14 @@ class Storage:
         """
         pass
         
-    def delete_from_data_file(self, data_file: str, conditions: str):
-        """
-        Удалить из data_file содержимое, удовлетворяющее некоторым условиям (подумаем, как это сделать)
-        Args: 
-            data_file(str): название data_file
-            conditions(str): условия, по которым удаляем
-        """
-        pass
-        
     def delete_data_file(self, data_file_path: str):
         """
         Удалить data_file
         Args:
-            data_file_path: путь к файлу, который удаляем
+            data_file_path(str): путь к файлу, который удаляем
         """
         pass
         
-    #================================================================================
-
     def create_metadata(self, metadata: dict, metadata_file_path: str):
         """
         Создать файл с метаданными.
@@ -93,6 +80,7 @@ class Storage:
         Args:
             metadata (dict): Словарь с метаданными.
             metadata_file_path (str): Путь к файлу с метаданными.
+
         """
         with open(metadata_file_path, "w") as f:
             json.dump(metadata, f, ensure_ascii=False, indent=4)
@@ -116,6 +104,7 @@ class Storage:
             metadata_file_path (str): Путь к файлу с метаданными.
         Returns:
             metadata (dict): Словарь с метаданными.
+
         """
         with open(metadata_file_path, "r") as f:
             metadata = json.load(f)
@@ -126,19 +115,16 @@ class Storage:
         """
         Удалить файл с метаданными
         Args:
-            metadata_file_path (str): Путь к удаляемому файлу.
+
+            metadata_file_path(str): путь к файлу, который удаляем
         """
-        
         if os.path.exists(metadata_file_path):
             os.remove(metadata_file_path)
-
-    #================================================================================
-
     def create_index_file(self, index_file: str, type: str):
         """
         Создать индекс файл
         Args:
-            index_file: название файла, который создаем
+            index_file(str): название файла, который создаем
         """
         pass
         
@@ -146,7 +132,7 @@ class Storage:
         """
         Получить содержимое файла с метаданными
         Args:
-            index_file: название файла, который удаляем
+            index_file(str): название файла, который удаляем
         """
         pass
         
@@ -154,7 +140,6 @@ class Storage:
         """
         Удалить файл с метаданными
         Args:
-            index_file: название файла, который обновляем
+            index_file(str): название файла, который обновляем
         """
         pass
-        
