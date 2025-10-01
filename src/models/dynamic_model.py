@@ -29,9 +29,12 @@ def create_dynamic_model(
     fields = {}
 
     for field_name, config in conditions.items():
-        field_type = config.pop("type", Any) 
-        field_info = Field(**config) if config else ...
-        fields[field_name] = (field_type, field_info)
+        if isinstance(config, dict):
+            field_type = config.pop("type", Any)
+            field_info = Field(**config) if config else ...
+            fields[field_name] = (field_type, field_info)
+        else:
+            fields[field_name] = (config, Field())
 
     dynamic_model = create_model(model_name, **fields)
 

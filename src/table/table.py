@@ -1,9 +1,9 @@
 from typing import Any, List, Dict, Optional
-from src.table.container import Container  
-from src.storage.storage import Storage 
-from src.models.dynamic_model import create_dynamic_model
-from src.config import Config
-# from src.index.index import Index
+from table.container import Container  
+from storage.storage import Storage 
+from models.dynamic_model import create_dynamic_model
+from config import Config
+# from index.index import Index
 
 
 class Table(Container):
@@ -33,9 +33,9 @@ class Table(Container):
         # Загружаем начальные данные
         self._load_initial_data()
         # self.indexes = Index.get_all_indexes()
-        config = Config()
-        self.data_file_path = config.data_file_path
-        self.metadata_file_path = config.metadata_file_path
+        self.config = Config()
+        self.data_file_path = self.config.data_file_path
+        self.metadata_file_path = self.config.metadata_file_path
     
     def _load_initial_data(self):
         """Загрузка начальных данных из Storage"""
@@ -213,10 +213,12 @@ class Table(Container):
         """
         try:
             table_structure = self.storage.get_metadata(self.metadata_file_path)
+            print(table_structure, "eeee")
             PydanticModel = create_dynamic_model(conditions=table_structure)
+            print(PydanticModel.__annotations__)
             object = PydanticModel(**values)
             self.storage.insert_in_data_file(self.data_file_path, values)
-            print(f"Вставка данных: {object} (заглушка)")
+            print(f"Вставка данных: {object}")
             return {"success": True}
         except Exception as e:
             print(f"Error: {e}")
@@ -250,19 +252,41 @@ class Table(Container):
         full_data = self.storage.get_from_data_file(self.data_file_path)
         filtered_data = []
         if conditions:
-            PydanticModel = create_dynamic_model(conditions=conditions)
             for row in full_data:
-                try: 
-                    PydanticModel(**row)
-                    filtered_data.append(row)
-                except Exception:
-                    continue
+                match = True
+                for field, rules in conditions.items():
+                    # проверка наличия поля
+                    if field not in row:
+                        match = False
+                        break
+                    value = row[field]
+                    # проверка типа поля
+                    if "type" in rules and not isinstance(value, rules["type"]):
+                        match = False
+                        break
+                    # проверка строки на длину
+                    if isinstance(value, str):
+                        if ("min_length" in rules and 
+                            len(value) < rules["min_length"]) or ("max_length" in rules and 
+                                                                  len(value) > rules["max_length"]):
+                            match = False
+                            break
+                    # проверка числа 
+                    if isinstance(value, (int, float)):
+                        if ("gt" in rules and value <= rules["gt"]) or ("lt" in rules and value >= rules["lt"]):
+                            match = False
+                            break
+                    if not isinstance(rules, dict) and value != rules:
+                        match = False
+                        break
+                if match:
+                    filtered_data.append(row) 
+
+        data = filtered_data if conditions else full_data  
+
         if columns:
-            result = []
-            for row in filtered_data:
-                result.append({key: row[key] for key in columns if key in row}) 
-            return result
-        print(f"Выбор колонок: {columns}, условия: {conditions} (заглушка)")
+            return [{key: row[key] for key in columns if key in row} for row in data]
+        print(f"Выбор колонок: {columns}, условия: {conditions}")
         return filtered_data
 
     def update(self,
@@ -282,20 +306,23 @@ class Table(Container):
         table_structure = self.storage.get_metadata(self.metadata_file_path)
         PydanticModel = create_dynamic_model(conditions=table_structure)
 
-        if PydanticModel(**new_data):
-            full_data = self.storage.get_from_data_file(self.data_file_path)
-            for row in full_data:
-                # Проверяем, подходит ли строка под условия (если условия есть)
-                match = True
-                if conditions:
-                    match = all(row.get(key) == value for key, value in conditions.items())
+        full_data = self.storage.get_from_data_file(self.data_file_path)
+        for row in full_data:
+            # Проверяем, подходит ли строка под условия (если условия есть)
+            match = True
+            if conditions:
+                match = all(row.get(key) == value for key, value in conditions.items())
 
-                if match and len(full_data) > 1:
-                    row.update(new_data)  # Обновляем только разрешённые поля
-                    updated_rows += 1
-            if updated_rows > 0:
-                self.storage.update_data_file(self.data_file_path, full_data)
-            print(f"Обновление данных: {new_data}, условия: {conditions} (заглушка)")
+            if match and len(full_data) > 1:
+                row.update(new_data)  # Обновляем только разрешённые поля
+                try:
+                    if PydanticModel(**row):
+                        updated_rows += 1
+                except Exception as e:
+                    print(f"Новые данные введены с ошибкой. Проверьте условия: {e}")
+        if updated_rows > 0:
+            self.storage.update_data_file(self.data_file_path, full_data)
+        print(f"Обновление данных: {new_data}, условия: {conditions} ")
         return updated_rows
     
     def delete(self,
@@ -311,22 +338,17 @@ class Table(Container):
             int: Количество удаленных строк
         """
         full_data = self.storage.get_from_data_file(self.data_file_path)
-        PydanticModel = create_dynamic_model(conditions=conditions)
-
-        # Фильтруем строки, которые НЕ соответствуют условиям (их оставим)
         remaining_data = []
         delete_rows = 0
 
         for row in full_data:
-            try:
-                PydanticModel(**row)  # Если валидация проходит, строка подлежит удалению
+            match = all(row.get(key) == value for key, value in conditions.items())
+            if match:
                 delete_rows += 1
-            except Exception:
-                remaining_data.append(row)  # Если не проходит, оставляем
-
+            else:
+                remaining_data.append(row)
         # Сохраняем оставшиеся данные обратно в хранилище
         self.storage.update_data_file(self.data_file_path, tuple(remaining_data))
-
         return delete_rows
     
     def show_structure(self) -> None:
