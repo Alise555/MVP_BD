@@ -3,6 +3,7 @@ from typing import List, Optional
 
 from enum_status import Status
 from top_level_api.abstract.abstract_manager_api import AbstractDBAPI
+from database_manager.DBManager import DBManager
 
 
 @dataclass
@@ -23,10 +24,9 @@ class DBAPI(AbstractDBAPI):
     def __init__(
         self,
         # data_root: str | Path = "./data"
-        db_manager=None,
     ):
         self.current_db: Optional[str] = None
-        self.db_manager = db_manager
+        self.db_manager: DBManager = DBManager()
 
     def create_database(self, db_name: str) -> ApiResult:
         """Создает базу данных."""

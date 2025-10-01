@@ -17,7 +17,7 @@ class DBManager:
         self._databases = set()
         self._current_database = ""
 
-    def create_db(self, database_name: str):
+    def create_database(self, database_name: str):
         """Создаёт новую базу данных.
         Args:
             database_name (str): Имя создаваемой базы данных.
@@ -39,7 +39,7 @@ class DBManager:
         else:
             return Status.ERROR
 
-    def delete_db(self, database_name: str):
+    def delete_database(self, database_name: str):
         """Удаляет базу данных.
         Args:
             database_name (str): Имя удаляемой базы данных.
@@ -57,7 +57,7 @@ class DBManager:
         else:
             return Status.ERROR
 
-    def update_db(self, old_database_name: str, new_database_name: str):
+    def update_database(self, old_database_name: str, new_database_name: str):
         """Переименовывает базу данных.
         Args:
             old_database_name (str): Текущее имя базы данных.
@@ -65,7 +65,9 @@ class DBManager:
         """
         if old_database_name not in self._databases:
             return Status.ERROR
-        result_rename_folder = self._storage.rename_folder(old_database_name, new_database_name)
+        result_rename_folder = self._storage.rename_folder(
+            old_database_name, new_database_name
+        )
         if result_rename_folder == Status.OK:
             self._databases.remove(old_database_name)
             self._databases.add(new_database_name)
@@ -88,12 +90,10 @@ class DBManager:
         self._current_database = database_name
 
     def show_database(self) -> List[str]:
-        """Возвращает список всех баз данных.
-        """
+        """Возвращает список всех баз данных."""
         result_metadata = self._storage.get_metadata("/")
         return list(self._databases)
 
     def current_database(self):
-        """Возвращает имя текущей активной базы данных.
-        """
+        """Возвращает имя текущей активной базы данных."""
         return self._current_database
