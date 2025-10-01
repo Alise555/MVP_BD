@@ -1,31 +1,126 @@
-import json
-from typing import Dict, List, Any
+from typing import Tuple, Dict, Any, List
 
 class Storage:
-    """Класс для работы с файловой системой"""
+    def create_folder(self, folder_path: str):
+        """
+        Создать папку по пути folder_path
+        Args:
+            folder_path(str): путь к создаваемой папке
+        """
+        pass
     
-    def __init__(self, db_name: str, table_name: str):
-        self.db_name = db_name
-        self.table_name = table_name
+    def delete_folder(self, folder_path: str):
+        """
+        Удалить папку по пути folder_path и все ее содержимое
+        Args:
+            folder_path(str): путь к удаляемой папке
+        """
+        pass
     
-    def update_metadata(self, metadata: Dict[str, Any]) -> None:
-        """Обновляет метаданные таблицы (Table_INFO)"""
-        print(f"Storage: Обновление метаданных для таблицы {self.table_name}")
-        print(f"Метаданные: {metadata}")
-        # Реальная логика записи в Table_INFO
+    def rename_folder(self, folder_path: str, new_name: str):
+        """
+        Переименовать папку по пути folder_path на new_name
+        Args:
+            folder_path(str): путь к папке
+            new_name(str): новое название папки
+        """
+        pass
     
-    def update_data_file(self, data: List[List[Any]]) -> None:
-        """Обновляет файл с данными таблицы (Table_DATA)"""
-        print(f"Storage: Обновление данных для таблицы {self.table_name}")
-        print(f"Количество записей: {len(data)}")
-        # Реальная логика записи в Table_DATA
+    def create_data_file(self, data_file_path: str):
+        """
+        Создать data_file
+        Args:
+            data_file_path(str): путь к data_file
+        """
+        pass
     
-    def load_metadata(self) -> Dict[str, Any]:
-        """Загружает метаданные таблицы"""
-        # Заглушка - в реальности загрузка из Table_INFO
-        return {}
-    
-    def load_data(self) -> List[List[Any]]:
-        """Загружает данные таблицы"""
-        # Заглушка - в реальности загрузка из Table_DATA
-        return []
+    def insert_in_data_file(self, data_file_path: str, content: Dict[str, Any]):
+        """
+        Поместить в data_file новое содержимое content (self, вставляем данные в конец data_file)
+        Args:
+            data_file_path(str): путь к data_file
+            content(str): содержимое, которое вставляем в data_file
+        """
+        pass
+        
+    def update_data_file(self, data_file_path: str, new_content: List[List[Any]]):
+        """
+        Перезаписать содержимое data_file новым содержимым new_content
+        Args:
+            datafile_name(str): путь к обновляемому data_file
+            new_content(str): новое содержимое, которое попадет перезапишет data_file
+        """
+        pass
+        
+    def get_from_data_file(self, data_file_path: str) -> List[List[Any]]:
+        """
+        Получить содержимое data_file
+        Args:
+            data_file_path(str): путь к data_file
+        """
+        pass
+        
+    def delete_data_file(self, data_file_path: str):
+        """
+        Удалить data_file
+        Args:
+            data_file_path(str): путь к файлу, который удаляем
+        """
+        pass
+        
+    def create_metadata(self, metadata: dict, metadata_file_path: str):
+        """
+        Создать файл с метаданными
+        Args:
+            metadata_file(str): название файла, который создаем
+        
+        """
+        pass
+        
+    def update_metadata(self, metadata: dict, metadata_file_path: str):
+        """
+        Обновить файл с метаданными
+        Args:
+            metadata_file_path(str): название файла, который обновляем
+        """
+        pass
+        
+    def get_metadata(self, metadata_file_path: str) -> dict:
+        """
+        Получить содержимое файла с метаданными
+        Args:
+            metadata_file_path(str): путь к файлу с метаданными
+        """
+        pass
+        
+    def delete_metadata(self, metadata_file_path: str):
+        """
+        Удалить файл с метаданными
+        Args:
+            metadata_file_path(str): путь к файлу, который удаляем
+        """
+        pass
+        
+    def create_index_file(self, index_file: str, type: str):
+        """
+        Создать индекс файл
+        Args:
+            index_file(str): название файла, который создаем
+        """
+        pass
+        
+    def delete_index_file(self, index_file: str):
+        """
+        Получить содержимое файла с метаданными
+        Args:
+            index_file(str): название файла, который удаляем
+        """
+        pass
+        
+    def update_index_file(self, index_file: str):
+        """
+        Удалить файл с метаданными
+        Args:
+            index_file(str): название файла, который обновляем
+        """
+        pass
