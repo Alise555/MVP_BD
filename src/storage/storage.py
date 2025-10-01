@@ -1,6 +1,11 @@
 import os
-import json
+
+
+
 from typing import Tuple, Dict, Any, List
+import json
+import pickle
+
 
 class Storage:
     def create_folder(self, folder_path: str):
@@ -34,27 +39,38 @@ class Storage:
         Args:
             data_file_path(str): путь к data_file
         """
-        pass
+        if os.path.exists(data_file_path):
+            return 
+        with open(data_file_path, 'w'):
+            pass
     
 
     def insert_in_data_file(self, data_file_path: str, content: Dict[str, Any]):
         """
-        Поместить в data_file новое содержимое content (self, вставляем данные в конец data_file)
+        Поместить в data_file новое содержимое content (вставляем данные в конец data_file)
         Args:
             data_file_path(str): путь к data_file
             content(str): содержимое, которое вставляем в data_file
         """
-        pass
+
+        with open(data_file_path, 'ab') as f:
+            to_dump = list(content.values())
+            pickle.dump(to_dump, f)
+
+
         
+
 
     def update_data_file(self, data_file_path: str, new_content: List[List[Any]]):
         """
         Перезаписать содержимое data_file новым содержимым new_content
         Args:
-            datafile_name(str): путь к обновляемому data_file
+            data_file_path(str): путь к обновляемому data_file
             new_content(str): новое содержимое, которое попадет перезапишет data_file
         """
-        pass
+        with open(data_file_path, 'wb') as f:
+            for row in new_content:
+                pickle.dump(row, f)
         
 
     def get_from_data_file(self, data_file_path: str) -> List[List[Any]]:
@@ -63,7 +79,17 @@ class Storage:
         Args:
             data_file_path(str): путь к data_file
         """
-        pass
+        # pickle для каждого insert создает новую pickle-последовательность. поэтому либо здесь код будет раздутый,
+        # либо в insert придется каждый раз заново файл читать. пока что так оставим (хотя меня бесит что нужно лишние байты хранить)
+        rows = []
+        with open(data_file_path, 'rb') as f:
+            try:
+                while True:
+                    row = pickle.load(f)
+                    rows.append(row)
+            except EOFError:
+                pass
+        return rows
         
     def delete_data_file(self, data_file_path: str):
         """
@@ -71,7 +97,8 @@ class Storage:
         Args:
             data_file_path(str): путь к файлу, который удаляем
         """
-        pass
+        if os.path.exists(data_file_path):
+            os.remove(data_file_path)
         
     def create_metadata(self, metadata: dict, metadata_file_path: str):
         """
