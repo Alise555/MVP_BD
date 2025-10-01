@@ -25,8 +25,6 @@ class DBAPI(AbstractDBAPI):
         # data_root: str | Path = "./data"
         db_manager=None,
     ):
-        # self.data_root = Path(data_root).resolve()
-        # self.data_root.mkdir(parents=True, exist_ok=True)
         self.current_db: Optional[str] = None
         self.db_manager = db_manager
 

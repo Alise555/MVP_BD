@@ -3,6 +3,8 @@ from typing import Any, Dict, List
 
 from enum_status import Status
 from top_level_api.abstract.abstract_database_api import AbstractDatabaseAPI
+from Database.databases.relational_db import RelationalDB
+from Database.abstract.base_db import BaseDB
 
 
 @dataclass
@@ -14,8 +16,12 @@ class ApiResult:
 class DatabaseAPI(AbstractDatabaseAPI):
     """Top-level API для работы с таблицами"""
 
-    def __init__(self, database=None):
-        self.database = database
+    database: BaseDB
+
+    def __init__(self):
+        self.database = RelationalDB(
+            cur_db="test", base_url="/tmp/testing"
+        )  # пока оставим явное определение
 
     def create_table(self, table_name: str, table_struct: Dict[str, Any]) -> ApiResult:
         """Создаёт таблицу."""

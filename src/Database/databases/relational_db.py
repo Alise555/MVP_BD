@@ -1,4 +1,5 @@
-from abstract.base_db import BaseDB
+from Database.abstract.base_db import BaseDB
+from storage.storage import Storage
 import os
 
 
@@ -6,6 +7,7 @@ class RelationalDB(BaseDB):
 
     def __init__(self, cur_db: str, base_url):
         self.db_path = os.path.join(base_url, cur_db)
+        self._storage = Storage()
 
     def create_table(self, table_name: str, table_struct: dict) -> bool | Exception:
         """Создает таблицу в базе данных.
@@ -28,9 +30,11 @@ class RelationalDB(BaseDB):
             self._storage.create_folder(folder_path=table_path)
 
             # Создаем путь до метадаты
-            metadata_path = os.path.join(table_path,"metadata")
+            metadata_path = os.path.join(table_path, "metadata")
             # Создаем метадату
-            self._storage.create_metadata(metadata=table_struct, metadata_file_path=metadata_path)
+            self._storage.create_metadata(
+                metadata=table_struct, metadata_file_path=metadata_path
+            )
 
             # Создаем путь до файла с данными
             data_file_path = os.path.join(table_path, "data")
@@ -57,7 +61,7 @@ class RelationalDB(BaseDB):
             table_path = os.path.join(self.db_path, table_name)
 
             # Создаем путь до метадаты
-            metadata_path = os.path.join(table_path,"metadata")
+            metadata_path = os.path.join(table_path, "metadata")
 
             res: dict = self._storage.get_metadata(metadata_file_path=metadata_path)
             return res
@@ -80,7 +84,6 @@ class RelationalDB(BaseDB):
         try:
             # Путь до файла таблицы
             table_path = os.path.join(self.db_path, table_name)
-
             # Удаляем директорию
             self._storage.delete_folder(folder_path=table_path)
             return True
@@ -95,7 +98,7 @@ class RelationalDB(BaseDB):
         """
 
         # Создает путь до метадаты базы данных
-        db_metadata_path=os.join(self.db_path,"metadata")
+        db_metadata_path = os.path.join(self.db_path, "metadata")
 
         # Получаем метадату базы данных
         res: dict = self._storage.get_metadata(metadata_file_path=db_metadata_path)
