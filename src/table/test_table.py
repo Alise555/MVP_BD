@@ -1,5 +1,6 @@
 import sys
 import os
+from unittest.mock import MagicMock
 
 from src.table.table import Table
 
@@ -144,6 +145,63 @@ def main():
     else:
         print("Неверный выбор. Запуск интерактивного режима.")
         interactive_test()
+
+
+def test_insert_success():
+    test_data = {"id": 1, "name": "Alice", "age": 30}
+    table_structure = {"id": int, "name": str, "age": int}
+    Table(name="test").storage.get_metadata = MagicMock(return_value=table_structure)
+    result = Table(name="test").insert(values=test_data)
+    assert result == {"success": True}
+
+
+def test_insert_failed():
+    test_data = {"id": 1, "name": "Alice", "age": "thirty"}
+    table_structure = {"id": int, "name": str, "age": int}
+    Table(name="test").storage.get_metadata = MagicMock(return_value=table_structure)
+    result = Table(name="test").insert(values=test_data)
+    assert result == {"success": False}
+
+
+def test_select():
+    test_data = ({"id": 1, "username": "Bob", "age": 24}, {"id": 2, "username": "Alice", "age": 14},
+                 {"id": 3, "username": "Mark", "age": 1}, {"id": 4, "username": "Li", "age": 0},)
+    Table(name="test").storage.get_from_data_file = MagicMock(return_value=test_data)
+    test_columns = ["username"]
+    test_conditions = {
+        "username": {
+            "type": str,
+            "min_length": 2,
+            "max_length": 20,
+        },
+        "age": {
+            "type": int,
+            "gt": 2,
+            "lt": 120
+        }
+    }
+    result = Table(name="test").select(columns=test_columns, conditions=test_conditions)
+    assert result == [{"id": 2, "username": "Alice", "age": 14}]
+
+
+def test_update():
+    table_structure = {"id": int, "username": str, "age": int}
+    Table(name="test").storage.get_metadata = MagicMock(return_value=table_structure)
+    test_full_data = ({"id": 1, "username": "Tima", "age": 13}, {"id": 2, "username": "Robert", "age": 43},)
+    Table(name="test").storage.get_from_data_file = MagicMock(return_value=test_full_data)
+    new_data = {"username": "Franklin", "age": 25}
+    test_conditions = {"username": "Robert"}
+    result = Table(name="test").update(new_data=new_data, conditions=test_conditions)
+    assert result == 1
+
+
+def test_delete():
+    test_full_data = ({"id": 1, "username": "Tima", "age": 13}, {"id": 2, "username": "Robert", "age": 43},)
+    Table(name="test").storage.get_from_data_file = MagicMock(return_value=test_full_data)
+    test_conditions = {"username": "Tima"}
+    result = Table(name="test").delete(conditions=test_conditions)
+    assert result == 1
+
 
 if __name__ == "__main__":
     main()
