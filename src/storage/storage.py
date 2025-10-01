@@ -124,4 +124,3 @@ class Storage:
             index_file(str): название файла, который обновляем
         """
         pass
-        
