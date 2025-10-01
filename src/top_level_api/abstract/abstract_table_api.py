@@ -6,17 +6,17 @@ class AbstractTableAPI(ABC):
     """Abstract API для работы с колонками таблицы и индексы."""
 
     @abstractmethod
-    def add_column(self, column_name: str, column_type: str):
+    def add_column(self, table_name: str, column_data: Dict):
         """Добавляет новую колонку в таблицу."""
         pass
 
     @abstractmethod
-    def modify_column(self, column_name: str, new_definition: Dict[str, Any]):
+    def modify_column(self, table_name: str, column_name: str, column_data: Dict):
         """Изменяет существующую колонку."""
         pass
 
     @abstractmethod
-    def drop_column(self, column_name: str):
+    def drop_column(self, table_name: str, column_name: str):
         """Удаляет колонку из таблицы."""
         pass
     

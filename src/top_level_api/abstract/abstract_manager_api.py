@@ -6,15 +6,15 @@ class AbstractDBAPI(ABC):
     Абстрактный класс для работы с БД (CRUD для Баз Данных).
     """
     @abstractmethod
-    def create_database(self, name:str):
+    def create_database(self, db_name:str):
         pass
 
     @abstractmethod
-    def update_database(self, old_name:str, new_name:str):
+    def update_database(self, old_db_name: str, new_db_name: str):
         pass
 
     @abstractmethod
-    def delete_database(self, name:str):
+    def drop_database(self, db_name:str):
         pass
 
     @abstractmethod
@@ -22,5 +22,9 @@ class AbstractDBAPI(ABC):
         pass
 
     @abstractmethod
-    def use_database(self, name:str):
+    def use_database(self, db_name:str):
+        pass
+
+    @abstractmethod
+    def get_current_db(self):
         pass

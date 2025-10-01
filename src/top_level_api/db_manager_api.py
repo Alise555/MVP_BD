@@ -27,34 +27,37 @@ class DBAPI(AbstractDBAPI):
         ):
         # self.data_root = Path(data_root).resolve()
         # self.data_root.mkdir(parents=True, exist_ok=True)
-        # self.current_db: Optional[str] = None
+        self.current_db: Optional[str] = None
         self.db_manager = db_manager
 
-    def create_database(self, name:str) -> ApiResult:
+    def create_database(self, db_name:str) -> ApiResult:
         """Создает базу данных."""
         try:
-            return self.db_manager.create_db(name)
+            result = self.db_manager.create_database(db_name)
+            return ApiResult(status=Status.OK, message=result)
         except Exception as e:
             return ApiResult(status=Status.ERROR, message=f"Ошибка в создание БД: {str(e)}")
 
-    def update_database(self, old_name:str, new_name:str) -> ApiResult:
+    def update_database(self, old_db_name: str, new_db_name: str) -> ApiResult:
         """Переименовывает базу данных."""
         try:
-            return self.db_manager.update_db(old_name, new_name)
+            result = self.db_manager.update_database(old_db_name, new_db_name)
+            return ApiResult(status=Status.OK, message=result)
         except Exception as e:
             return ApiResult(status=Status.ERROR, message=f"Ошибка в переименовании БД: {str(e)}")
         
-    def delete_database(self, name:str) -> ApiResult:
+    def drop_database(self, db_name:str) -> ApiResult:
         """Удаляет базу данных."""
         try:
-            return self.db_manager.delete_db(name)
+            result = self.db_manager.delete_database(db_name)
+            return ApiResult(status=Status.OK, message=result)
         except Exception as e:
             return ApiResult(status=Status.ERROR, message=f"Ошибка при удалении БД: {str(e)}")
     
     def show_databases(self) -> ShowDataBases:
         """Возвращает список всех баз данных."""
         try:
-            return self.db_manager.show_database()
+            return self.db_manager.show_databases()
         except Exception as e:
             return ShowDataBases(
                 status=Status.ERROR,
@@ -62,12 +65,21 @@ class DBAPI(AbstractDBAPI):
                 message=f"Ошибка при получении списка БД: {str(e)}"
             )
         
-    def use_database(self, name:str) -> ApiResult:
+    def use_database(self, db_name:str) -> ApiResult:
         """Выбирает базу данных для работы."""
         try:
-            return self.db_manager.use_database(name)
+            result = self.db_manager.use_database(db_name)
+            return ApiResult(status=Status.OK, message=result)
         except Exception as e:
             return ApiResult(status=Status.ERROR, message=f"Ошибка при выборе БД: {str(e)}")
+    
+    def get_current_db(self) -> ApiResult:
+        """Возвращает текущую базу данных."""
+        try:
+            result = self.db_manager.get_current_db()
+            return ApiResult(status=Status.OK, message=result)
+        except Exception as e:
+            return ApiResult(status=Status.ERROR, message=f"Ошибка при получении текущей БД: {str(e)}")
 
 
 

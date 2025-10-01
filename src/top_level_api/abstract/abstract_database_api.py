@@ -9,7 +9,7 @@ class AbstractDatabaseAPI(ABC):
         pass
 
     @abstractmethod
-    def describe_table(self, table_name: str) -> dict:
+    def describe_table(self, db_name: str) -> dict:
         """Возвращает структуру таблицы."""
         pass
 
