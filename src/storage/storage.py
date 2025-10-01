@@ -3,6 +3,7 @@ from typing import Tuple, Dict, Any, List
 import json
 import pickle
 
+
 class Storage:
     def create_folder(self, folder_path: str):
         """
@@ -50,7 +51,7 @@ class Storage:
         with open(data_file_path, 'ab') as f:
             to_dump = list(content.values())
             pickle.dump(to_dump, f)
-            
+
     def update_data_file(self, data_file_path: str, new_content: List[List[Any]]):
         """
         Перезаписать содержимое data_file новым содержимым new_content
@@ -62,7 +63,8 @@ class Storage:
             for row in new_content:
                 pickle.dump(row, f)
         
-    def get_from_data_file(self, data_file_path: str) -> Dict[str, Any]:
+
+    def get_from_data_file(self, data_file_path: str) -> List[List[Any]]:
         """
         Получить содержимое data_file
         Args:
@@ -79,12 +81,12 @@ class Storage:
             except EOFError:
                 pass
         return rows
-    
+        
     def delete_data_file(self, data_file_path: str):
         """
         Удалить data_file
         Args:
-            data_file_path: путь к файлу, который удаляем
+            data_file_path(str): путь к файлу, который удаляем
         """
         if os.path.exists(data_file_path):
             os.remove(data_file_path)
@@ -93,7 +95,7 @@ class Storage:
         """
         Создать файл с метаданными
         Args:
-            metadata_file: название файла, который создаем
+            metadata_file(str): название файла, который создаем
         
         """
         pass
@@ -102,7 +104,7 @@ class Storage:
         """
         Обновить файл с метаданными
         Args:
-            metadata_file_path: название файла, который обновляем
+            metadata_file_path(str): название файла, который обновляем
         """
         pass
         
@@ -110,7 +112,7 @@ class Storage:
         """
         Получить содержимое файла с метаданными
         Args:
-            metadata_file_path: путь к файлу с метаданными
+            metadata_file_path(str): путь к файлу с метаданными
         """
         pass
         
@@ -118,7 +120,7 @@ class Storage:
         """
         Удалить файл с метаданными
         Args:
-            metadata_file_path: путь к файлу, который удаляем
+            metadata_file_path(str): путь к файлу, который удаляем
         """
         pass
         
@@ -126,7 +128,7 @@ class Storage:
         """
         Создать индекс файл
         Args:
-            index_file: название файла, который создаем
+            index_file(str): название файла, который создаем
         """
         pass
         
@@ -134,7 +136,7 @@ class Storage:
         """
         Получить содержимое файла с метаданными
         Args:
-            index_file: название файла, который удаляем
+            index_file(str): название файла, который удаляем
         """
         pass
         
@@ -142,14 +144,6 @@ class Storage:
         """
         Удалить файл с метаданными
         Args:
-            index_file: название файла, который обновляем
+            index_file(str): название файла, который обновляем
         """
         pass
-        
-if __name__ == '__main__':
-    storage = Storage()
-    
-    storage.update_data_file('databases/db1/table1/data.bin', [['val1', 'adsf']])
-    storage.insert_in_data_file('databases/db1/table1/data.bin', {'field1' : 'val1', 'field2': 'adsf'})
-    a = storage.get_from_data_file('databases/db1/table1/data.bin')
-    print(a)
