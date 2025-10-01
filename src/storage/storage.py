@@ -1,3 +1,5 @@
+import os
+import json
 from typing import Tuple, Dict, Any, List
 
 class Storage:
@@ -34,6 +36,7 @@ class Storage:
         """
         pass
     
+
     def insert_in_data_file(self, data_file_path: str, content: Dict[str, Any]):
         """
         Поместить в data_file новое содержимое content (self, вставляем данные в конец data_file)
@@ -43,6 +46,7 @@ class Storage:
         """
         pass
         
+
     def update_data_file(self, data_file_path: str, new_content: List[List[Any]]):
         """
         Перезаписать содержимое data_file новым содержимым new_content
@@ -52,6 +56,7 @@ class Storage:
         """
         pass
         
+
     def get_from_data_file(self, data_file_path: str) -> List[List[Any]]:
         """
         Получить содержимое data_file
@@ -70,37 +75,51 @@ class Storage:
         
     def create_metadata(self, metadata: dict, metadata_file_path: str):
         """
-        Создать файл с метаданными
+        Создать файл с метаданными.
+
         Args:
-            metadata_file(str): название файла, который создаем
-        
+            metadata (dict): Словарь с метаданными.
+            metadata_file_path (str): Путь к файлу с метаданными.
+
         """
-        pass
+        with open(metadata_file_path, "w") as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=4)
         
     def update_metadata(self, metadata: dict, metadata_file_path: str):
         """
         Обновить файл с метаданными
+
         Args:
-            metadata_file_path(str): название файла, который обновляем
+            metadata (dict): Словарь с метаданными.
+            metadata_file_path (str): Путь к файлу с метаданными.
         """
-        pass
+        with open(metadata_file_path, "w") as f:
+            json.dump(metadata, f, ensure_ascii=False, indent=4)
         
     def get_metadata(self, metadata_file_path: str) -> dict:
         """
-        Получить содержимое файла с метаданными
+        Получить содержимое файла с метаданными.
+
         Args:
-            metadata_file_path(str): путь к файлу с метаданными
+            metadata_file_path (str): Путь к файлу с метаданными.
+        Returns:
+            metadata (dict): Словарь с метаданными.
+
         """
-        pass
+        with open(metadata_file_path, "r") as f:
+            metadata = json.load(f)
+
+        return metadata
         
     def delete_metadata(self, metadata_file_path: str):
         """
         Удалить файл с метаданными
         Args:
+
             metadata_file_path(str): путь к файлу, который удаляем
         """
-        pass
-        
+        if os.path.exists(metadata_file_path):
+            os.remove(metadata_file_path)
     def create_index_file(self, index_file: str, type: str):
         """
         Создать индекс файл
