@@ -6,7 +6,7 @@ if __name__ == "__main__":  # pragma: no cover
     command_buffer = []
     parser = Parser()
     while True:
-        #       db_name = parser.get_current_db()
+        db_name = parser.get_current_db()
         CURSOR = ">"
         if command_buffer:
             CURSOR = "|"

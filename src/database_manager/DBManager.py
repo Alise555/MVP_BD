@@ -18,7 +18,10 @@ class DBManager:
             storage (str): Объект хранилища.
         """
         self._storage = Storage()
-        self._databases = set()
+        try:
+            self._databases = set(self._storage.get_metadata(path)["databases"])
+        except FileNotFoundError:
+            self._databases = set()
         self._current_database = ""
 
     def create_database(self, database_name: str):
@@ -35,9 +38,13 @@ class DBManager:
         if result_create_folder == Status.OK:
             self._databases.add(database_name)
             if self._databases:
-                result_metadata = self._storage.update_metadata(self._databases, path)
+                result_metadata = self._storage.update_metadata(
+                    self._form_metadata_dict(), path
+                )
             else:
-                result_metadata = self._storage.create_metadata(self._databases, path)
+                result_metadata = self._storage.create_metadata(
+                    self._form_metadata_dict(), path
+                )
             if result_metadata == Status.OK:
                 return Status.OK
             else:
@@ -57,7 +64,9 @@ class DBManager:
         )
         if result_delete_folder == Status.OK:
             self._databases.remove(database_name)
-            result_metadata = self._storage.update_metadata(self._databases, path)
+            result_metadata = self._storage.update_metadata(
+                self._form_metadata_dict(), path
+            )
             if result_metadata == Status.OK:
                 return Status.OK
             else:
@@ -74,12 +83,14 @@ class DBManager:
         if old_database_name not in self._databases:
             raise Exception("Unknown db")
         result_rename_folder = self._storage.rename_folder(
-            old_database_name, new_database_name
+            os.path.join(path, old_database_name), new_database_name
         )
         if result_rename_folder == Status.OK:
             self._databases.remove(old_database_name)
             self._databases.add(new_database_name)
-            result_metadata = self._storage.update_metadata(self._databases, path)
+            result_metadata = self._storage.update_metadata(
+                self._form_metadata_dict(), path
+            )
             if result_metadata == Status.OK:
                 return Status.OK
             else:
@@ -94,14 +105,17 @@ class DBManager:
         """
         if database_name not in self._databases:
             raise Exception("Unknown db_name")
-        result_metadata = self._storage.get_metadata(path)
         self._current_database = database_name
+        return Status.OK
 
     def show_databases(self) -> List[str]:
         """Возвращает список всех баз данных."""
-        result_metadata = self._storage.get_metadata(path)
         return list(self._databases)
 
     def current_database(self):
         """Возвращает имя текущей активной базы данных."""
         return self._current_database
+
+    def _form_metadata_dict(self):
+        """Формирует данные для метадата формата"""
+        return {"databases": list(self._databases)}

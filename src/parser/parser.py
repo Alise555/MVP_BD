@@ -1,4 +1,4 @@
-from typing import Any
+from dataclasses import dataclass
 from typing import Callable
 import re
 
@@ -8,26 +8,28 @@ from exceptions.SQLSyntaxError import (
     SQLSyntaxError,
 )
 from parser.constants import (
-    DataAPI,
-    DBAPI,
-    DatabaseAPI,
-    TableAPI,
+    TopLevelApi,
     commands_data,
     TypesEnum,
 )
+from enum_status import Status
+
+
+@dataclass
+class ApiResult:
+    status: Status
+    message: str = ""
 
 
 class Parser:
     commands = {}
 
     def __init__(self):
-        self.objects = {
-            "DataAPI": DataAPI(),
-            "DatabaseAPI": DatabaseAPI(),
-            "TableApi": TableAPI(),
-            "DBAPI": DBAPI(),
-        }
-        print(self.objects)
+        self.top_level_api = TopLevelApi()
+
+    def get_current_db(self):
+        data: ApiResult = self.top_level_api.get_current_db()
+        return data.message
 
     def parse_input(self, user_input: list[str]) -> None:  # pragma: no cover
         """Принимает ввод от пользователя и разбивает одну большую команду на под-команды и выполняет каждую команду последовательно
@@ -77,7 +79,7 @@ class Parser:
                 method_fields.pop("return", 0)
                 values = None
                 if value.pattern is None:
-                    return value.method(self._find_api_obj(value.method))
+                    return value.method(self.top_level_api)
                 else:
                     values = []
                     match = re.fullmatch(pattern=value.pattern, string=command)
@@ -93,15 +95,8 @@ class Parser:
                                 field_value=field_value, field_type=field_type
                             )
                         )
-                    return value.method(self._find_api_obj(value.method), *values)
+                    return value.method(self.top_level_api, *values)
         raise UnknownCommandError("Unknown command\nUse help command in this terminal")
-
-    def _find_api_obj(
-        self, method: Callable
-    ) -> DBAPI | DatabaseAPI | DataAPI | TableAPI:
-        method_class = method.__qualname__.split(".")[0]
-        if self.objects.get(method_class, None):
-            return self.objects.get(method_class)
 
     def _parse_field(
         self, field_value: str, field_type: type
