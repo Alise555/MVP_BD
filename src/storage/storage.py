@@ -202,6 +202,16 @@ class Storage:
                 pickle.dump(item, f)
             self.write_offsets(offsets, table_path)
 
+    def read_data(self, table_path: str):
+        data = []
+        data_path = os.path.join(table_path, data_name)
+        offsets = self.read_offsets(table_path)
+        with open(data_path, "rb") as f:
+            for offset in offsets:
+                f.seek(offset)
+                data.append(pickle.load(f))
+        return data
+
     def write_offsets(self, offsets: list[int], table_path: str):
         offset_path = os.path.join(table_path, offset_name)
         with open(offset_path, "w") as f:
