@@ -3,6 +3,8 @@ from storage.storage import Storage
 from config.config import path as base_url
 import os
 
+from enum_status import Status
+
 
 class RelationalDB(BaseDB):
 
@@ -40,9 +42,8 @@ class RelationalDB(BaseDB):
             data_file_path = os.path.join(table_path)
             self._storage.create_data_file(data_file_path=data_file_path)
             tables_metadata["tables"].append(table_name)
-            print(tables_metadata)
             self.update_tables_metadata(db_name, tables_metadata)
-            return True
+            return Status.OK
         except Exception as e:
             raise Exception(f"Error creating table {table_name}: {e}")
 
@@ -67,7 +68,6 @@ class RelationalDB(BaseDB):
             # Создаем путь до метадаты
             metadata_path = os.path.join(table_path)
             res: dict = self._storage.get_metadata(metadata_file_path=metadata_path)
-            print(res)
             return res
         except Exception as e:
             raise Exception(f"Error describing table {table_name}: {e}")
@@ -94,7 +94,7 @@ class RelationalDB(BaseDB):
             tables_metadata = self.get_tables_metadata(db_name)
             tables_metadata["tables"].remove(table_name)
             self.update_tables_metadata(db_name, tables_metadata)
-            return True
+            return Status.OK
         except Exception as e:
             raise Exception(f"Error dropping table {table_name}: {e}")
 
@@ -117,7 +117,6 @@ class RelationalDB(BaseDB):
     def update_tables_metadata(self, db_name: str, metadata: dict):
         metadata_path = os.path.join(base_url, db_name)
         try:
-            print(metadata)
             self._storage.update_metadata(metadata, metadata_path)
         except FileNotFoundError:
             self._storage.create_metadata(metadata, metadata_path)
