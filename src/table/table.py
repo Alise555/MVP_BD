@@ -1,6 +1,8 @@
+import os 
+import json
 from typing import Any, List, Dict, Optional
-from src.table.container import Container  
-from src.storage.storage import Storage 
+from table.container import Container  
+from storage.storage import Storage 
 
 class Table(Container):
     """
@@ -19,7 +21,7 @@ class Table(Container):
         super().__init__(name)
         self.name = name
         self.db_name = db_name
-        self.storage = storage if storage is not None else Storage(db_name, name)
+        self.storage = storage if storage is not None else Storage()
         
         # Метаданные: {имя_колонки: тип_данных}
         self.columns_metadata = {}  # Заменяем self.columns
@@ -32,13 +34,30 @@ class Table(Container):
     def _load_initial_data(self):
         """Загрузка начальных данных из Storage"""
         try:
-            self.columns_metadata = self.storage.load_metadata()
-            self.data = self.storage.load_data()
-        except:
-            # Если файлы не существуют, инициализируем пустыми значениями
+            # Создаем папку базы данных если не существует
+            if not os.path.exists(self.db_name):
+                os.makedirs(self.db_name, exist_ok=True)
+            
+            metadata_file_path = f"{self.db_name}/{self.name}_metadata.json"
+            data_file_path = f"{self.db_name}/{self.name}_data.pkl"
+            
+            # Создаем файлы если не существуют
+            if not os.path.exists(data_file_path):
+                with open(data_file_path, 'wb') as f:
+                    pass  # Создаем пустой файл
+            
+            if not os.path.exists(metadata_file_path):
+                with open(metadata_file_path, 'w') as f:
+                    json.dump({}, f)  # Создаем пустые метаданные
+            
+            self.columns_metadata = self.storage.get_metadata(metadata_file_path)
+            self.data = self.storage.get_from_data_file(data_file_path)
+            
+        except Exception as e:
+            print(f"Ошибка при загрузке данных: {e}")
             self.columns_metadata = {}
             self.data = []
-    
+        
     def get_name(self) -> str:
         """Получить имя таблицы."""
         return self.name
@@ -51,18 +70,38 @@ class Table(Container):
         """Проверить, пуста ли таблица."""
         return len(self.data) == 0
     
-    def add_column(self, column_name: str, data_type: str) -> bool:
+    def add_column(self, column_info: dict) -> bool:
         """
-        Добавить колонку в таблицу.
+        Добавить колонку в таблицу (только метаданные).
         
         Args:
-            column_name (str): Имя колонки
-            data_type (str): Тип данных колонки
-            
+            column_info (dict): Словарь с информацией о колонке {имя: тип}
+        
         Returns:
             bool: True если успешно, False если ошибка
         """
         try:
+            if not column_info:
+                print("Ошибка: Пустая информация о колонке")
+                return False
+                
+            column_name = list(column_info.keys())[0]
+            data_type_str = str(column_info[column_name])
+            
+            # Преобразуем <class 'str'> в 'str'
+            if "class" in data_type_str:
+                data_type = data_type_str.split("'")[1]
+            elif ":" in data_type_str:
+                # Формат: str age (исправляем парсинг)
+                data_type = data_type_str.split()[0]  # Берем первое слово
+            else:
+                data_type = data_type_str
+
+            valid_types = ['str', 'int', 'float', 'bool']
+            if data_type not in valid_types:
+                print(f"Предупреждение: Неизвестный тип данных '{data_type}', используем 'str'")
+                data_type = 'str'
+            
             # Проверяем, существует ли уже колонка
             if column_name in self.columns_metadata:
                 print(f"Ошибка: Колонка '{column_name}' уже существует")
@@ -70,39 +109,42 @@ class Table(Container):
             
             print(f"Добавление колонки '{column_name}' типа '{data_type}'")
             
-            # 1. Добавляем колонку в метаданные
+            # ТОЛЬКО добавляем колонку в метаданные
             self.columns_metadata[column_name] = data_type
             
-            # 2. Добавляем значение по умолчанию к каждой существующей строке
-            default_value = self._get_default_value(data_type)
-            for row in self.data:
-                row.append(default_value)
+            # ТОЛЬКО сохраняем изменения метаданных через Storage
+            metadata_file_path = f"{self.db_name}/{self.name}_metadata.json"
+            self.storage.update_metadata(self.columns_metadata, metadata_file_path)
             
-            # 3. Сохраняем изменения через Storage
-            self.storage.update_metadata(self.columns_metadata)
-            self.storage.update_data_file(self.data)
-            
-            print(f"Колонка '{column_name}' успешно добавлена")
+            print(f"Колонка '{column_name}' успешно добавлена в метаданные")
             return True
             
         except Exception as e:
             print(f"Ошибка при добавлении колонки: {e}")
             return False
-    
-    def modify_column(self, old_column_name: str, new_column_name: str, 
-                     new_data_type: Optional[str] = None) -> bool:
+
+    def modify_column(self, old_column_name: str, column_changes: dict) -> bool:
         """
-        Изменить колонку в таблице.
+        Изменить колонку в таблице (только метаданные).
         
         Args:
             old_column_name (str): Текущее имя колонки
-            new_column_name (str): Новое имя колонки
-            new_data_type (str, optional): Новый тип данных
-            
+            column_changes (dict): Словарь с изменениями {новое_имя: новый_тип}
+        
         Returns:
             bool: True если успешно, False если ошибка
         """
         try:
+            # Извлекаем новое имя и тип из словаря
+            new_column_name = list(column_changes.keys())[0]
+            new_data_type_str = str(column_changes[new_column_name])
+            
+            # Преобразуем <class 'str'> в 'str'
+            if "class" in new_data_type_str:
+                new_data_type = new_data_type_str.split("'")[1]
+            else:
+                new_data_type = new_data_type_str
+            
             # Проверяем существование старой колонки
             if old_column_name not in self.columns_metadata:
                 print(f"Ошибка: Колонка '{old_column_name}' не существует")
@@ -113,51 +155,34 @@ class Table(Container):
                 print(f"Ошибка: Колонка '{new_column_name}' уже существует")
                 return False
             
-            print(f"Изменение колонки '{old_column_name}' на '{new_column_name}'")
+            print(f"Изменение колонки '{old_column_name}' на '{new_column_name}' с типом '{new_data_type}'")
             
-            # 1. Получаем индекс колонки
-            column_names = list(self.columns_metadata.keys())
-            col_index = column_names.index(old_column_name)
-            
-            # 2. Изменяем имя колонки если нужно
+            # ТОЛЬКО работаем с метаданными
             if new_column_name != old_column_name:
-                # Сохраняем тип данных
-                data_type = self.columns_metadata[old_column_name]
-                # Удаляем старую колонку и добавляем с новым именем
+                # Сохраняем текущий тип данных и переименовываем
+                current_type = self.columns_metadata[old_column_name]
                 del self.columns_metadata[old_column_name]
-                self.columns_metadata[new_column_name] = data_type
-                # Обновляем индекс
-                col_index = list(self.columns_metadata.keys()).index(new_column_name)
+                self.columns_metadata[new_column_name] = current_type
             
-            # 3. Изменяем тип данных если указан
-            if new_data_type and new_data_type != self.columns_metadata[new_column_name]:
-                old_type = self.columns_metadata[new_column_name]
-                self.columns_metadata[new_column_name] = new_data_type
-                print(f"Тип данных изменен с '{old_type}' на '{new_data_type}'")
-                
-                # Преобразуем существующие данные к новому типу
-                for row in self.data:
-                    if row[col_index] is not None:
-                        try:
-                            row[col_index] = self._convert_value(row[col_index], new_data_type)
-                        except (ValueError, TypeError):
-                            # Если преобразование невозможно, устанавливаем значение по умолчанию
-                            row[col_index] = self._get_default_value(new_data_type)
+            # Всегда обновляем тип данных (даже если имя не изменилось)
+            old_type = self.columns_metadata[new_column_name]
+            self.columns_metadata[new_column_name] = new_data_type
+            print(f"Тип данных изменен с '{old_type}' на '{new_data_type}'")
             
-            # 4. Сохраняем изменения через Storage
-            self.storage.update_metadata(self.columns_metadata)
-            self.storage.update_data_file(self.data)
+            # ТОЛЬКО сохраняем изменения метаданных
+            metadata_file_path = f"{self.db_name}/{self.name}_metadata.json"
+            self.storage.update_metadata(self.columns_metadata, metadata_file_path)
             
-            print("Колонка успешно изменена")
+            print("Метаданные колонки успешно изменены")
             return True
             
         except Exception as e:
             print(f"Ошибка при изменении колонки: {e}")
             return False
-    
+
     def drop_column(self, column_name: str) -> bool:
         """
-        Удалить колонку из таблицы.
+        Удалить колонку из таблицы (только метаданные).
         
         Args:
             column_name (str): Имя колонки для удаления
@@ -171,24 +196,16 @@ class Table(Container):
                 print(f"Ошибка: Колонка '{column_name}' не существует")
                 return False
             
-            print(f"Удаление колонки '{column_name}'")
+            print(f"Удаление колонки '{column_name}' из метаданных")
             
-            # 1. Определяем индекс удаляемой колонки
-            col_index = list(self.columns_metadata.keys()).index(column_name)
-            
-            # 2. Удаляем колонку из метаданных
+            # ТОЛЬКО удаляем колонку из метаданных
             del self.columns_metadata[column_name]
             
-            # 3. Удаляем соответствующий столбец из каждой строки данных
-            for row in self.data:
-                if len(row) > col_index:
-                    del row[col_index]
+            # ТОЛЬКО сохраняем изменения метаданных
+            metadata_file_path = f"{self.db_name}/{self.name}_metadata.json"
+            self.storage.update_metadata(self.columns_metadata, metadata_file_path)
             
-            # 4. Сохраняем изменения через Storage
-            self.storage.update_metadata(self.columns_metadata)
-            self.storage.update_data_file(self.data)
-            
-            print(f"Колонка '{column_name}' успешно удалена")
+            print(f"Колонка '{column_name}' успешно удалена из метаданных")
             return True
             
         except Exception as e:
