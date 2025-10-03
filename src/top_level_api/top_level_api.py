@@ -181,6 +181,7 @@ class TopLevelApi:
     def select(self, columns: tuple, table_name: str, filtered: tuple = None):
         """Выбирает записи - делегирует низкоуровневому Table"""
         try:
+            print(f"{columns}, {filtered}")
             result = self.table.select(db_name=self.db_manager.current_database(), 
                                        columns=columns, table_name=table_name, 
                                        conditions=filtered)
@@ -191,7 +192,7 @@ class TopLevelApi:
             )
 
     def update(
-        self, table_name: str, fields: dict[str, Any], filtered: tuple = None
+        self, table_name: str, fields: dict, filtered: tuple = None
     ) -> ApiResult:
         """Обновляет записи - делегирует низкоуровневому Table"""
         try:

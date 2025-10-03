@@ -22,7 +22,6 @@ class Table(Container):
         """
         self.storage = Storage()
 
-
     def _load_table_data(self, db_name: str, table_name: str):
         """Загрузка начальных данных из Storage"""
         return self.storage.get_metadata(os.path.join(path, db_name, table_name))
@@ -141,11 +140,12 @@ class Table(Container):
         """
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
+        structure_path = os.path.join(db_path, metadata_name)
         try:
-            table_structure = self.storage.get_metadata(table_path)
+            table_structure = self.storage.get_metadata(structure_path)
             PydanticModel = create_dynamic_model(conditions=table_structure)
             print(PydanticModel.__annotations__)
-            data = [dict(zip(fields, item)) for item in values]
+            data = [dict(zip(fields[0], item)) for item in values]
             if all(PydanticModel.model_validate(d) for d in data):
                 self.storage.write_data(table_path=table_path, data=data)
                 return True
@@ -165,19 +165,7 @@ class Table(Container):
 
         Args:
             columns (Tuple[str], optional): Список колонок для вывода
-            conditions (Tuple[str], optional): Условия выборки, например:
-                {
-                    "username": {
-                        "type": str,
-                        "min_length": 3,
-                        "max_length": 20,
-                    },
-                    "age": {
-                        "type": int,
-                        "gt": 0,
-                        "lt": 120
-                    }
-                }
+            conditions (Tuple[str], optional): Условия выборки
 
         Returns:
             List[Dict[str, Any]]: Список строк, соответствующих условиям
@@ -188,36 +176,7 @@ class Table(Container):
         filtered_data = []
         if conditions:
             for row in full_data:
-                match = True
-                for field, rules in conditions.items():
-                    # проверка наличия поля
-                    if field not in row:
-                        match = False
-                        break
-                    value = row[field]
-                    # проверка типа поля
-                    if "type" in rules and not isinstance(value, rules["type"]):
-                        match = False
-                        break
-                    # проверка строки на длину
-                    if isinstance(value, str):
-                        if (
-                            "min_length" in rules and len(value) < rules["min_length"]
-                        ) or (
-                            "max_length" in rules and len(value) > rules["max_length"]
-                        ):
-                            match = False
-                            break
-                    # проверка числа
-                    if isinstance(value, (int, float)):
-                        if ("gt" in rules and value <= rules["gt"]) or (
-                            "lt" in rules and value >= rules["lt"]
-                        ):
-                            match = False
-                            break
-                    if not isinstance(rules, dict) and value != rules:
-                        match = False
-                        break
+                match = check_conditions(conditions=conditions, row=row)
                 if match:
                     filtered_data.append(row)
 
@@ -233,33 +192,34 @@ class Table(Container):
         new_data: Dict[str, Any], 
         db_name: str,
         table_name: str,
-        conditions: Optional[Dict[str, Any]] = None
+        conditions: Optional[Tuple[str]] = None
     ) -> int:
         """
         Обновить данные в таблице.
 
         Args:
             new_data (Dict[str, Any]): Новые значения
-            conditions (Dict[str, Any], optional): Условия для обновления
+            conditions (Tuple[str], optional): Условия для обновления
 
         Returns:
             int: Количество обновленных строк
         """
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
+        structure_path = os.path.join(db_path, metadata_name)
 
         updated_rows = 0
-        table_structure = self.storage.get_metadata(table_path)
+        table_structure = self.storage.get_metadata(structure_path)
         PydanticModel = create_dynamic_model(conditions=table_structure)
 
-        full_data = self.storage.get_from_data_file(table_path)
+        full_data = self.storage.read_data(table_path)
         for row in full_data:
-            # Проверяем, подходит ли строка под условия (если условия есть)
             match = True
             if conditions:
-                match = all(row.get(key) == value for key, value in conditions.items())
+                # Проверяем, подходит ли строка под условия (если условия есть)
+                match = check_conditions(conditions=conditions, row=row)
 
-            if match and len(full_data) > 1:
+            if match:
                 row.update(new_data)  # Обновляем только разрешённые поля
                 try:
                     if PydanticModel(**row):
@@ -268,17 +228,18 @@ class Table(Container):
                     print(f"Новые данные введены с ошибкой. Проверьте условия: {e}")
         if updated_rows > 0:
             self.storage.update_data_file(path, full_data)
+            self.storage.update_data_file(path, full_data)
         print(f"Обновление данных: {new_data}, условия: {conditions} ")
         return updated_rows
 
     def delete(self, db_name: str, table_name: str, 
-               conditions: Dict[str, Any]) -> int:
+               conditions: Tuple[str]) -> int:
         """
         Удалить данные из таблицы.
 
         Args:
             table_name (str): Имя таблицы
-            conditions (Dict[str, Any]): Условия для удаления
+            conditions (Tuple[str]): Условия для удаления
 
         Returns:
             int: Количество удаленных строк
@@ -286,12 +247,14 @@ class Table(Container):
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
 
-        full_data = self.storage.get_from_data_file(table_path)
+        full_data = self.storage.read_data(table_path)
         remaining_data = []
         delete_rows = 0
 
         for row in full_data:
-            match = all(row.get(key) == value for key, value in conditions.items())
+            match = True
+            if conditions:
+                match = match = check_conditions(conditions=conditions, row=row)
             if match:
                 delete_rows += 1
             else:
@@ -309,3 +272,60 @@ class Table(Container):
             print("Первые 3 записи:")
             for i, row in enumerate(self.data[:3]):
                 print(f"  {i}: {row}")
+
+
+def parse_condition(condition_str: str) -> tuple:
+    """Разбирает строку условия на столбец, оператор и значение."""
+    # Определяем оператор (первый из доступных в строке)
+    operators = ['>=', '<=', '!=', '=', '>', '<']
+    operator = None
+    for op in operators:
+        if op in condition_str:
+            operator = op
+            break
+
+    if not operator:
+        raise ValueError(f"Неизвестный оператор в условии: {condition_str}")
+
+    # Разбиваем строку на части
+    column, value_str = condition_str.split(operator, 1)
+    column = column.strip()
+
+    # Преобразуем значение в нужный тип (int, float или str)
+    try:
+        value = int(value_str.strip())
+    except ValueError:
+        try:
+            value = float(value_str.strip())
+        except ValueError:
+            value = value_str.strip().strip("'\"")  # Убираем кавычки, если строка
+
+    return column, operator, value
+
+
+def check_conditions(conditions: tuple, row: dict) -> bool:
+    match = True
+    for condition_str in conditions:
+        column, operator, value = parse_condition(condition_str)
+        row_value = row.get(column)
+
+        # Проверяем условие
+        if operator == '=' and row_value != value:
+            match = False
+            break
+        elif operator == '>' and not (row_value > value):
+            match = False
+            break
+        elif operator == '<' and not (row_value < value):
+            match = False
+            break
+        elif operator == '>=' and not (row_value >= value):
+            match = False
+            break
+        elif operator == '<=' and not (row_value <= value):
+            match = False
+            break
+        elif operator == '!=' and not (row_value != value):
+            match = False
+            break
+    return match
