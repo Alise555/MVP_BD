@@ -1,7 +1,7 @@
 import sys
 import os
 
-from src.table.table import Table
+from table.table import Table
 
 def test_basic_functionality(table):
     """Тестирование базового функционала"""
@@ -68,7 +68,7 @@ def test_delete_data(table):
 def test_all_functions():
     """Тестирование всех функций последовательно"""
     print("\n" + "="*50)
-    print("📊 ПОЛНОЕ ТЕСТИРОВАНИЕ ВСЕХ ФУНКЦИЙ")
+    print(" ПОЛНОЕ ТЕСТИРОВАНИЕ ВСЕХ ФУНКЦИЙ")
     print("="*50)
     
     table = Table("users")
@@ -82,7 +82,7 @@ def test_all_functions():
     test_delete_data(table)
     test_drop_column(table)
     
-    print("\n✅ ВСЕ ТЕСТЫ ЗАВЕРШЕНЫ")
+    print("\n ВСЕ ТЕСТЫ ЗАВЕРШЕНЫ")
 
 def interactive_test():
     """Интерактивный выбор тестов"""
@@ -102,7 +102,7 @@ def interactive_test():
     
     while True:
         print("\n" + "="*40)
-        print("🎯 ВЫБЕРИТЕ ТЕСТ ДЛЯ ВЫПОЛНЕНИЯ")
+        print(" ВЫБЕРИТЕ ТЕСТ ДЛЯ ВЫПОЛНЕНИЯ")
         print("="*40)
         
         for key, (name, _) in tests.items():
@@ -122,11 +122,11 @@ def interactive_test():
                     test_func()  # Для полного теста не передаем table
                 else:
                     test_func(table)
-                print(f"✅ Тест '{test_name}' завершен успешно")
+                print(f" Тест '{test_name}' завершен успешно")
             except Exception as e:
-                print(f"❌ Ошибка в тесте '{test_name}': {e}")
+                print(f" Ошибка в тесте '{test_name}': {e}")
         else:
-            print("❌ Неверный выбор. Попробуйте снова.")
+            print(" Неверный выбор. Попробуйте снова.")
 
 def main():
     """Основная функция"""
