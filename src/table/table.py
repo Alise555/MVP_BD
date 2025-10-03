@@ -20,30 +20,9 @@ class Table(Container):
             db_name (str): Имя базы данных
             storage (Storage, optional): Объект хранилища. Если не передан, создается новый.
         """
-<<<<<<< HEAD
         self.storage = Storage()
 
     def _load_table_data(self, db_name: str, table_name: str):
-=======
-        super().__init__(name)
-        self.name = name
-        self.db_name = db_name
-        self.storage = storage if storage is not None else Storage(db_name, name)
-        
-        # Метаданные: {имя_колонки: тип_данных}
-        self.columns_metadata = {}  # Заменяем self.columns
-        # Данные таблицы: список строк, где каждая строка - список значений
-        self.data = []
-        
-        # Загружаем начальные данные
-        self._load_initial_data()
-        # self.indexes = Index.get_all_indexes()
-        self.config = Config()
-        self.data_file_path = self.config.data_file_path
-        self.metadata_file_path = self.config.metadata_file_path
-    
-    def _load_initial_data(self):
->>>>>>> Table
         """Загрузка начальных данных из Storage"""
         return self.storage.get_metadata(os.path.join(path, db_name, table_name))
 
@@ -101,7 +80,6 @@ class Table(Container):
         except Exception as e:
             print(f"Ошибка при добавлении колонки: {e}")
             return False
-<<<<<<< HEAD
 
     def modify_column(
         self,
@@ -111,11 +89,6 @@ class Table(Container):
         new_column_name: str,
         new_data_type: Optional[str] = None,
     ) -> bool:
-=======
-    
-    def modify_column(self, old_column_name: str, new_column_name: str, 
-                      new_data_type: Optional[str] = None) -> bool:
->>>>>>> Table
         """
         Изменить колонку в таблице.
 
@@ -139,15 +112,8 @@ class Table(Container):
         Returns:
             bool: True если успешно, False если ошибка
         """
-<<<<<<< HEAD
         pass
 
-=======
-        # TODO: Реализовать удаление колонки
-        print(f"Удаление колонки '{column_name}' (заглушка)")
-        return True
-    
->>>>>>> Table
     def _get_default_value(self, data_type: str) -> Any:
         """Возвращает значение по умолчанию для типа данных"""
         defaults = {"str": "", "int": 0, "float": 0.0, "bool": False}
@@ -161,40 +127,14 @@ class Table(Container):
             return converter(value)
         return value
 
-<<<<<<< HEAD
-    # Остальные методы остаются как заглушки
-    def insert(self, values: Dict[str, Any]) -> bool:
-        """Вставить запись в таблицу."""
-        print(f"Вставка данных: {values} (заглушка)")
-        return True
-
-    def select(
-        self, columns: List[str] = None, conditions: Dict[str, Any] = None
-    ) -> List[Dict[str, Any]]:
-        """Выбрать данные из таблицы."""
-        print(f"Выборка колонок: {columns}, условия: {conditions} (заглушка)")
-        return []
-
-    def update(self, values: Dict[str, Any], conditions: Dict[str, Any] = None) -> int:
-        """Обновить данные в таблице."""
-        pass
-
-    def delete(self, conditions: Dict[str, Any] = None) -> int:
-        """Удалить данные из таблицы."""
-        pass
-
-    def show_structure(self) -> None:
-        """Показать структуру таблицы (для отладки)"""
-        pass
-=======
     def insert(self, values: Dict[str, Any]) -> Dict[str, bool]:
         """
         Вставить запись в таблицу.
-        
+
         Args:
             values (Dict[str, Any]): Список Pydantic-моделей для вставки
                 {имя_колонки: значение}
-                
+
         Returns:
             Dict[str, bool]: True если успешно, False если ошибка
         """
@@ -211,12 +151,14 @@ class Table(Container):
             print(f"Error: {e}")
             return {"success": False}
 
-    def select(self,
-               columns: Optional[List[str]] = None, 
-               conditions: Optional[Dict[str, Any]] = None) -> Optional[List[Dict[str, Any]]]:
+    def select(
+        self,
+        columns: Optional[List[str]] = None,
+        conditions: Optional[Dict[str, Any]] = None,
+    ) -> Optional[List[Dict[str, Any]]]:
         """
         Выбрать данные из таблицы.
-        
+
         Args:
             columns (List[str], optional): Список колонок для вывода
             conditions (Dict[str, Any], optional): Условия выборки, например:
@@ -232,7 +174,7 @@ class Table(Container):
                         "lt": 120
                     }
                 }
-            
+
         Returns:
             List[Dict[str, Any]]: Список строк, соответствующих условиям
         """
@@ -253,39 +195,43 @@ class Table(Container):
                         break
                     # проверка строки на длину
                     if isinstance(value, str):
-                        if ("min_length" in rules and 
-                            len(value) < rules["min_length"]) or ("max_length" in rules and 
-                                                                  len(value) > rules["max_length"]):
+                        if (
+                            "min_length" in rules and len(value) < rules["min_length"]
+                        ) or (
+                            "max_length" in rules and len(value) > rules["max_length"]
+                        ):
                             match = False
                             break
-                    # проверка числа 
+                    # проверка числа
                     if isinstance(value, (int, float)):
-                        if ("gt" in rules and value <= rules["gt"]) or ("lt" in rules and value >= rules["lt"]):
+                        if ("gt" in rules and value <= rules["gt"]) or (
+                            "lt" in rules and value >= rules["lt"]
+                        ):
                             match = False
                             break
                     if not isinstance(rules, dict) and value != rules:
                         match = False
                         break
                 if match:
-                    filtered_data.append(row) 
+                    filtered_data.append(row)
 
-        data = filtered_data if conditions else full_data  
+        data = filtered_data if conditions else full_data
 
         if columns:
             return [{key: row[key] for key in columns if key in row} for row in data]
         print(f"Выбор колонок: {columns}, условия: {conditions}")
         return filtered_data
 
-    def update(self,
-               new_data: Dict[str, Any], 
-               conditions: Optional[Dict[str, Any]] = None) -> int:
+    def update(
+        self, new_data: Dict[str, Any], conditions: Optional[Dict[str, Any]] = None
+    ) -> int:
         """
         Обновить данные в таблице.
-        
+
         Args:
             new_data (Dict[str, Any]): Новые значения
             conditions (Dict[str, Any], optional): Условия для обновления
-            
+
         Returns:
             int: Количество обновленных строк
         """
@@ -311,16 +257,15 @@ class Table(Container):
             self.storage.update_data_file(self.data_file_path, full_data)
         print(f"Обновление данных: {new_data}, условия: {conditions} ")
         return updated_rows
-    
-    def delete(self,
-               conditions: Dict[str, Any]) -> int:
+
+    def delete(self, conditions: Dict[str, Any]) -> int:
         """
         Удалить данные из таблицы.
-        
+
         Args:
             table_name (str): Имя таблицы
             conditions (Dict[str, Any]): Условия для удаления
-            
+
         Returns:
             int: Количество удаленных строк
         """
@@ -337,7 +282,7 @@ class Table(Container):
         # Сохраняем оставшиеся данные обратно в хранилище
         self.storage.update_data_file(self.data_file_path, tuple(remaining_data))
         return delete_rows
-    
+
     def show_structure(self) -> None:
         """Показать структуру таблицы (для отладки)"""
         print(f"\nТаблица: {self.name}")
@@ -347,6 +292,3 @@ class Table(Container):
             print("Первые 3 записи:")
             for i, row in enumerate(self.data[:3]):
                 print(f"  {i}: {row}")
-
-    
->>>>>>> Table
