@@ -5,7 +5,7 @@ import pickle
 import shutil
 
 from enum_status import Status
-from config.config import metadata_name
+from config.config import metadata_name, data_name, offset_name
 
 
 class Storage:
@@ -192,3 +192,26 @@ class Storage:
             index_file(str): название файла, который обновляем
         """
         pass
+
+    def write_data(self, data: list[dict], table_path: str):
+        data_path = os.path.join(table_path, data_name)
+        offsets = self.read_offsets(table_path)
+        with open(data_path, "ab") as f:
+            for item in data:
+                offsets.append(f.tell())
+                pickle.dump(item, f)
+            self.write_offsets(offsets, table_path)
+
+    def write_offsets(self, offsets: list[int], table_path: str):
+        offset_path = os.path.join(table_path, offset_name)
+        with open(offset_path, "w") as f:
+            data = {"offsets": offsets}
+            json.dump(data, f)
+
+    def read_offsets(self, table_path: str):
+        try:
+            offset_path = os.path.join(table_path, offset_name)
+            with open(offset_path, "r") as f:
+                return json.load(f)["offsets"]
+        except FileNotFoundError:
+            return []
