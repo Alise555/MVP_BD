@@ -10,7 +10,7 @@ class RelationalDB(BaseDB):
         self._storage = Storage()
 
     def create_table(
-        self, table_name: str, table_struct: dict, db_name: str
+        self, table_name: str, table_struct: tuple, db_name: str
     ) -> bool | Exception:
         """Создает таблицу в базе данных.
 
@@ -40,6 +40,7 @@ class RelationalDB(BaseDB):
             data_file_path = os.path.join(table_path)
             self._storage.create_data_file(data_file_path=data_file_path)
             tables_metadata["tables"].append(table_name)
+            print(tables_metadata)
             self.update_tables_metadata(db_name, tables_metadata)
             return True
         except Exception as e:
@@ -65,8 +66,8 @@ class RelationalDB(BaseDB):
 
             # Создаем путь до метадаты
             metadata_path = os.path.join(table_path)
-
             res: dict = self._storage.get_metadata(metadata_file_path=metadata_path)
+            print(res)
             return res
         except Exception as e:
             raise Exception(f"Error describing table {table_name}: {e}")
@@ -108,10 +109,7 @@ class RelationalDB(BaseDB):
 
         # Получаем метадату базы данных
         res: dict = self._storage.get_metadata(metadata_file_path=db_path)
-
-        # Забираем по ключу все таблицы в бд
-        tables: list[str] = list(res["tables"])
-        return tables
+        return res
 
     def get_db_path(self, db_name: str) -> str:
         return os.path.join(base_url, db_name)
@@ -119,6 +117,7 @@ class RelationalDB(BaseDB):
     def update_tables_metadata(self, db_name: str, metadata: dict):
         metadata_path = os.path.join(base_url, db_name)
         try:
+            print(metadata)
             self._storage.update_metadata(metadata, metadata_path)
         except FileNotFoundError:
             self._storage.create_metadata(metadata, metadata_path)

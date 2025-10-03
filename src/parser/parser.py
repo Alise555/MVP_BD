@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from typing import Callable
 import re
 
+from tabulate import tabulate
+
 from exceptions.SQLSyntaxError import (
     WrongParametersError,
     UnknownCommandError,
@@ -28,8 +30,7 @@ class Parser:
         self.top_level_api = TopLevelApi()
 
     def get_current_db(self):
-        data: ApiResult = self.top_level_api.get_current_db()
-        return data.message
+        return self.top_level_api.get_current_db()
 
     def parse_input(self, user_input: list[str]) -> None:  # pragma: no cover
         """Принимает ввод от пользователя и разбивает одну большую команду на под-команды и выполняет каждую команду последовательно
@@ -56,7 +57,7 @@ class Parser:
         user_input = [item.strip() for item in user_input if item]
         for item in user_input:
             try:
-                print(self._parse_command(item))
+                print(self._form_output(self._parse_command(item)))
             except SQLSyntaxError as e:
                 print(e)
 
@@ -97,6 +98,24 @@ class Parser:
                         )
                     return value.method(self.top_level_api, *values)
         raise UnknownCommandError("Unknown command\nUse help command in this terminal")
+
+    def _form_output(self, result: str | dict | list[dict], header=None) -> str:
+        if isinstance(result, str):
+            return result
+        elif isinstance(result, dict):
+            strokes = []
+            if len(result) == 1 and isinstance(list(result.values())[0], list):
+                header = [list(result.keys())[0]]
+                for item in list(result.values())[0]:
+                    strokes.append([item])
+            else:
+                for key, value in result.items():
+                    header = ["field", "type"]
+                    strokes.append([key, value])
+            output = tabulate(strokes, headers=header, tablefmt="grid")
+            return output
+        elif isinstance(result, list):
+            pass
 
     def _parse_field(
         self, field_value: str, field_type: type
@@ -163,8 +182,6 @@ def _parse_dict_string(dict_string: str) -> dict:
                 pair = [item.strip() for item in pair if item]
                 key = pair[0]
                 value = pair[1]
-                if delimeter == ":" and pair[1].upper() in TypesEnum._member_names_:
-                    value = TypesEnum[value.upper()].value
                 result[key] = value
     return result
 

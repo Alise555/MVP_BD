@@ -27,17 +27,15 @@ class TopLevelApi:
 
     #  self.table = Table()
 
-    def create_table(self, table_name: str, table_struct: dict[str, Any]) -> ApiResult:
+    def create_table(self, table_name: str, table_struct: dict) -> ApiResult:
         """Создаёт таблицу."""
         try:
             result = self.database.create_table(
                 table_name, table_struct, self.db_manager.current_database()
             )
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR, message=f"Ошибка при создании таблицы: {str(e)}"
-            )
+            return f"{Status.ERROR}\nОшибка при создании таблицы: {str(e)}"
 
     def describe_table(self, table_name: str):
         """Возвращает структуру таблицы."""
@@ -45,11 +43,9 @@ class TopLevelApi:
             result = self.database.describe_table(
                 table_name, self.db_manager.current_database()
             )
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR, message=f"Ошибка в структуре таблицы: {str(e)}"
-            )
+            return f"{Status.ERROR}\nОшибка в структуре таблицы: {str(e)}"
 
     def drop_table(self, table_name: str) -> ApiResult:
         """Удаляет таблицу."""
@@ -57,84 +53,64 @@ class TopLevelApi:
             result = self.database.drop_table(
                 table_name, self.db_manager.current_database()
             )
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR, message=f"Ошибка при удалении таблицы: {str(e)}"
-            )
+            return f"{Status.ERROR}\nОшибка при удалении таблицы: {str(e)}"
 
     def show_tables(self) -> list[str]:
         """Возвращает список имён таблиц."""
         try:
             result = self.database.show_tables(self.db_manager.current_database())
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR,
-                message=f"Ошибка в возврате списка таблиц: {str(e)}",
-            )
+            return (f"{Status.ERROR}\nОшибка в возврате списка таблиц: {str(e)}",)
 
     def create_database(self, db_name: str) -> ApiResult:
         """Создает базу данных."""
         try:
             result = self.db_manager.create_database(db_name)
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR, message=f"Ошибка в создание БД: {str(e)}"
-            )
+            return f"{Status.ERROR}\nОшибка в создание БД: {str(e)}"
 
     def update_database(self, old_db_name: str, new_db_name: str) -> ApiResult:
         """Переименовывает базу данных."""
         try:
             result = self.db_manager.update_database(old_db_name, new_db_name)
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR, message=f"Ошибка в переименовании БД: {str(e)}"
-            )
+            return f"{Status.ERROR}\nОшибка в переименовании БД: {str(e)}"
 
     def drop_database(self, db_name: str) -> ApiResult:
         """Удаляет базу данных."""
         try:
             result = self.db_manager.delete_database(db_name)
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR, message=f"Ошибка при удалении БД: {str(e)}"
-            )
+            return f"{Status.ERROR}\nОшибка при удалении БД: {str(e)}"
 
     def show_databases(self) -> ShowDataBases:
         """Возвращает список всех баз данных."""
         try:
             return self.db_manager.show_databases()
         except Exception as e:
-            return ShowDataBases(
-                status=Status.ERROR,
-                databases=[],
-                message=f"Ошибка при получении списка БД: {str(e)}",
-            )
+            return f"{Status.ERROR}\nОшибка при получении списка БД: {str(e)}"
 
     def use_database(self, db_name: str) -> ApiResult:
         """Выбирает базу данных для работы."""
         try:
             result = self.db_manager.use_database(db_name)
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR, message=f"Ошибка при выборе БД: {str(e)}"
-            )
+            return f"{Status.ERROR}\nОшибка при выборе БД: {str(e)}"
 
     def get_current_db(self) -> ApiResult:
         """Возвращает текущую базу данных."""
         try:
             result = self.db_manager.current_database()
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR,
-                message=f"Ошибка при получении текущей БД: {str(e)}",
-            )
+            return (f"{Status.ERROR}\nОшибка при получении текущей БД: {str(e)}",)
 
     def add_column(self, table_name: str, column_data: dict) -> ApiResult:
         """Добавляет колонку - делегирует низкоуровневому Table"""
@@ -142,10 +118,7 @@ class TopLevelApi:
             result = self.table.add_column(table_name, column_data)
             return ApiResult(status=Status.OK, message=result)
         except Exception as e:
-            return ApiResult(
-                status=Status.ERROR,
-                message=f"Ошибка при добавлении колонки: {str(e)}",
-            )
+            return (f"{Status.ERROR}\nОшибка при добавлении колонки: {str(e)}",)
 
     def modify_column(
         self, table_name: str, column_name: str, column_data: dict
