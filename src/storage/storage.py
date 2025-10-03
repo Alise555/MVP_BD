@@ -51,7 +51,7 @@ class Storage:
         Args:
             data_file_path(str): путь к data_file
         """
-        data_path = os.path.join(data_file_path, ".data")
+        data_path = os.path.join(data_file_path, data_name)
         if os.path.exists(data_path):
             return Status.ERROR
         with open(data_path, "w"):
@@ -92,7 +92,7 @@ class Storage:
         # pickle для каждого insert создает новую pickle-последовательность. поэтому либо здесь код будет раздутый,
         # либо в insert придется каждый раз заново файл читать. пока что так оставим (хотя меня бесит что нужно лишние байты хранить)
         rows = []
-        data_path = os.path.join(data_file_path, ".data")
+        data_path = os.path.join(data_file_path, data_name)
         with open(data_path, "rb") as f:
             try:
                 while True:
@@ -108,7 +108,7 @@ class Storage:
         Args:
             data_file_path(str): путь к файлу, который удаляем
         """
-        data_path = os.path.join(data_file_path, ".data")
+        data_path = os.path.join(data_file_path, data_name)
         if os.path.exists(data_path):
             os.remove(data_path)
             return Status.OK
