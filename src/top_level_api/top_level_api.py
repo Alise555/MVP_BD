@@ -24,8 +24,7 @@ class TopLevelApi:
     def __init__(self):
         self.database = RelationalDB()
         self.db_manager = DBManager()
-
-    #  self.table = Table()
+        self.table = Table()
 
     def create_table(self, table_name: str, table_struct: dict) -> ApiResult:
         """Создаёт таблицу."""
@@ -169,17 +168,22 @@ class TopLevelApi:
     def insert(self, table_name: str, fields: tuple, values: list[Any]) -> ApiResult:
         """Вставляет запись - делегирует низкоуровневому Table"""
         try:
-            result = self.table.insert(table_name, fields, values)
-            return ApiResult(status=Status.OK, message=result)
+            print(fields, values)
+            print(type(fields), type(values))
+            result = self.table.insert(db_name=self.db_manager.current_database(), 
+                                       table_name=table_name, fields=fields, values=values)
+            return ApiResult(status=Status.OK, message=str(result))
         except Exception as e:
             return ApiResult(
                 status=Status.ERROR, message=f"Ошибка при вставке данных: {str(e)}"
             )
 
-    def select(self, fields: tuple, table_name: str, filtered: tuple = None):
+    def select(self, columns: tuple, table_name: str, filtered: tuple = None):
         """Выбирает записи - делегирует низкоуровневому Table"""
         try:
-            result = self.table.select_from(fields, table_name, filtered)
+            result = self.table.select(db_name=self.db_manager.current_database(), 
+                                       columns=columns, table_name=table_name, 
+                                       conditions=filtered)
             return ApiResult(status=Status.OK, message=result)
         except Exception as e:
             return ApiResult(
@@ -191,7 +195,9 @@ class TopLevelApi:
     ) -> ApiResult:
         """Обновляет записи - делегирует низкоуровневому Table"""
         try:
-            result = self.table.update(table_name, fields, filtered)
+            result = self.table.update(db_name=self.db_manager.current_database(),
+                                       table_name=table_name, new_data=fields, 
+                                       conditions=filtered)
             return ApiResult(status=Status.OK, message=result)
         except Exception as e:
             return ApiResult(
@@ -201,8 +207,9 @@ class TopLevelApi:
     def delete_from(self, table_name: str, filtered: tuple = None) -> ApiResult:
         """Удаляет записи - делегирует низкоуровневому Table"""
         try:
-            result = self.table.delete_from(table_name, filtered)
-            return ApiResult(status=Status.OK, message=result)
+            result = self.table.delete(db_name=self.db_manager.current_database(),
+                                       table_name=table_name, conditions=filtered)
+            return ApiResult(status=Status.OK, message=str(result))
         except Exception as e:
             return ApiResult(
                 status=Status.ERROR, message=f"Ошибка при удалении данных: {str(e)}"
