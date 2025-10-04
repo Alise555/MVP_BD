@@ -1,13 +1,19 @@
-from abstract.base_db import BaseDB
+from Database.abstract.base_db import BaseDB
+from storage.storage import Storage
+from config.config import path as base_url
 import os
+
+from enum_status import Status
 
 
 class RelationalDB(BaseDB):
 
-    def __init__(self, cur_db: str, base_url):
-        self.db_path = os.path.join(base_url, cur_db)
+    def __init__(self):
+        self._storage = Storage()
 
-    def create_table(self, table_name: str, table_struct: dict) -> bool | Exception:
+    def create_table(
+        self, table_name: str, table_struct: tuple, db_name: str
+    ) -> bool | Exception:
         """Создает таблицу в базе данных.
 
         Args:
@@ -21,25 +27,27 @@ class RelationalDB(BaseDB):
             bool | Exception: True если таблица создана успешно, иначе Exception.
         """
         try:
+            db_path = self.get_db_path(db_name)
             # Путь до файла таблицы
-            table_path = os.path.join(self.db_path, table_name)
-
+            table_path = os.path.join(db_path, table_name)
             # Создаем директорию
             self._storage.create_folder(folder_path=table_path)
-
-            # Создаем путь до метадаты
-            metadata_path = os.path.join(table_path,"metadata")
+            tables_metadata: dict[str, list] = self.get_tables_metadata(db_name)
             # Создаем метадату
-            self._storage.create_metadata(metadata=table_struct, metadata_file_path=metadata_path)
+            self._storage.create_metadata(
+                metadata=table_struct, metadata_file_path=table_path
+            )
 
             # Создаем путь до файла с данными
-            data_file_path = os.path.join(table_path, "data")
+            data_file_path = os.path.join(table_path)
             self._storage.create_data_file(data_file_path=data_file_path)
-            return True
+            tables_metadata["tables"].append(table_name)
+            self.update_tables_metadata(db_name, tables_metadata)
+            return Status.OK
         except Exception as e:
             raise Exception(f"Error creating table {table_name}: {e}")
 
-    def describe_table(self, table_name: str) -> dict:
+    def describe_table(self, table_name: str, db_name: str) -> dict:
         """Возвращает метаданные таблицы.
 
         Args:
@@ -53,18 +61,18 @@ class RelationalDB(BaseDB):
         """
 
         try:
+            db_path = self.get_db_path(db_name)
             # Путь до файла таблицы
-            table_path = os.path.join(self.db_path, table_name)
+            table_path = os.path.join(db_path, table_name)
 
             # Создаем путь до метадаты
-            metadata_path = os.path.join(table_path,"metadata")
-
+            metadata_path = os.path.join(table_path)
             res: dict = self._storage.get_metadata(metadata_file_path=metadata_path)
             return res
         except Exception as e:
             raise Exception(f"Error describing table {table_name}: {e}")
 
-    def drop_table(self, table_name: str) -> bool | Exception:
+    def drop_table(self, table_name: str, db_name: str) -> bool | Exception:
         """Удаляет таблицу из базы данных.
 
         Args:
@@ -78,28 +86,45 @@ class RelationalDB(BaseDB):
         """
 
         try:
+            db_path = self.get_db_path(db_name)
             # Путь до файла таблицы
-            table_path = os.path.join(self.db_path, table_name)
-
+            table_path = os.path.join(db_path, table_name)
             # Удаляем директорию
             self._storage.delete_folder(folder_path=table_path)
-            return True
+            tables_metadata = self.get_tables_metadata(db_name)
+            tables_metadata["tables"].remove(table_name)
+            self.update_tables_metadata(db_name, tables_metadata)
+            return Status.OK
         except Exception as e:
             raise Exception(f"Error dropping table {table_name}: {e}")
 
-    def show_tables(self) -> list[str]:
+    def show_tables(self, db_name: str) -> list[str]:
         """Возвращает список всех таблиц в базе данных.
 
         Returns:
             list[str]: Список имен таблиц.
         """
-
+        db_path = self.get_db_path(db_name)
         # Создает путь до метадаты базы данных
-        db_metadata_path=os.join(self.db_path,"metadata")
 
         # Получаем метадату базы данных
-        res: dict = self._storage.get_metadata(metadata_file_path=db_metadata_path)
+        res: dict = self._storage.get_metadata(metadata_file_path=db_path)
+        return res
 
-        # Забираем по ключу все таблицы в бд
-        tables: list[str] = res["tables"]
-        return tables
+    def get_db_path(self, db_name: str) -> str:
+        return os.path.join(base_url, db_name)
+
+    def update_tables_metadata(self, db_name: str, metadata: dict):
+        metadata_path = os.path.join(base_url, db_name)
+        try:
+            self._storage.update_metadata(metadata, metadata_path)
+        except FileNotFoundError:
+            self._storage.create_metadata(metadata, metadata_path)
+
+    def get_tables_metadata(self, db_name: str) -> dict[str, list]:
+        try:
+            metadata_path = os.path.join(base_url, db_name)
+            data = self._storage.get_metadata(metadata_path)
+            return data
+        except FileNotFoundError:
+            return {"tables": []}

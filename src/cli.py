@@ -1,4 +1,4 @@
-from parser.parser import Parser  # pragma: no cover
+from parser.parser import Parser, show_help  # pragma: no cover
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -6,14 +6,14 @@ if __name__ == "__main__":  # pragma: no cover
     command_buffer = []
     parser = Parser()
     while True:
-        #       db_name = parser.get_current_db()
+        db_name = parser.get_current_db()
         CURSOR = ">"
         if command_buffer:
             CURSOR = "|"
         try:
             user_input = input(f"{db_name}{CURSOR}").lower()
             if user_input == "help":
-                parser.show_help()
+                show_help()
                 print()
                 command_buffer = []
                 continue

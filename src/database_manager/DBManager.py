@@ -1,5 +1,9 @@
+import os
+
 from typing import List
 from enum_status import Status
+from storage.storage import Storage
+from config.config import path
 
 
 class DBManager:
@@ -8,92 +12,116 @@ class DBManager:
     Использует внешнее хранилище для операций с папками и метаданными.
     """
 
-    def __init__(self, storage: str) -> None:
+    def __init__(self) -> None:
         """Инициализирует экземпляр DBManager.
         Args:
             storage (str): Объект хранилища.
         """
-        self._storage = storage
-        self._databases = set()
+        self._storage = Storage()
         self._current_database = ""
 
-    def create_db(self, database_name: str):
+    def create_database(self, database_name: str):
         """Создаёт новую базу данных.
         Args:
             database_name (str): Имя создаваемой базы данных.
             metadata (Dict): Метаданные для базы данных.
         """
-        if database_name in self._databases:
-            return Status.ERROR
-        result_create_folder = self._storage.create_folder(database_name)
+        databases = set(self._get_databases()["databases"])
+        if database_name in databases:
+            raise Exception("Db already created")
+        result_create_folder = self._storage.create_folder(
+            os.path.join(path, database_name)
+        )
         if result_create_folder == Status.OK:
-            self._databases.add(database_name)
-            if self._databases:
-                result_metadata = self._storage.update_metadata(self._databases, "/")
+            databases.add(database_name)
+            if databases:
+                result_metadata = self._storage.update_metadata(
+                    self._form_metadata_dict(databases), path
+                )
             else:
-                result_metadata = self._storage.create_metadata(self._databases, "/")
+                result_metadata = self._storage.create_metadata(
+                    self._form_metadata_dict(databases), path
+                )
             if result_metadata == Status.OK:
                 return Status.OK
             else:
-                return Status.ERROR
+                raise Exception("Broken metadata")
         else:
-            return Status.ERROR
+            raise Exception("Broken folder")
 
-    def delete_db(self, database_name: str):
+    def delete_database(self, database_name: str):
         """Удаляет базу данных.
         Args:
             database_name (str): Имя удаляемой базы данных.
         """
-        if database_name not in self._databases:
-            return Status.ERROR
-        result_delete_folder = self._storage.delete_folder(database_name)
+        databases = set(self._get_databases()["databases"])
+        if database_name not in databases:
+            raise Exception("Unknown db")
+        result_delete_folder = self._storage.delete_folder(
+            os.path.join(path, database_name)
+        )
         if result_delete_folder == Status.OK:
-            self._databases.remove(database_name)
-            result_metadata = self._storage.update_metadata(self._databases, "/")
+            databases.remove(database_name)
+            result_metadata = self._storage.update_metadata(
+                self._form_metadata_dict(databases), path
+            )
             if result_metadata == Status.OK:
                 return Status.OK
             else:
-                return Status.ERROR
+                raise Exception("Broken metadata")
         else:
-            return Status.ERROR
+            raise Exception("Broken folder")
 
-    def update_db(self, old_database_name: str, new_database_name: str):
+    def update_database(self, old_database_name: str, new_database_name: str):
         """Переименовывает базу данных.
         Args:
             old_database_name (str): Текущее имя базы данных.
             new_database_name (str): Новое имя базы данных.
         """
-        if old_database_name not in self._databases:
-            return Status.ERROR
-        result_rename_folder = self._storage.rename_folder(old_database_name, new_database_name)
+        databases = set(self._get_databases()["databases"])
+        if old_database_name not in databases:
+            raise Exception("Unknown db")
+        result_rename_folder = self._storage.rename_folder(
+            os.path.join(path, old_database_name), new_database_name
+        )
         if result_rename_folder == Status.OK:
-            self._databases.remove(old_database_name)
-            self._databases.add(new_database_name)
-            result_metadata = self._storage.update_metadata(self._databases, "/")
+            databases.remove(old_database_name)
+            databases.add(new_database_name)
+            result_metadata = self._storage.update_metadata(
+                self._form_metadata_dict(databases), path
+            )
             if result_metadata == Status.OK:
                 return Status.OK
             else:
-                return Status.ERROR
+                raise Exception("Broken metadata")
         else:
-            return Status.ERROR
+            raise Exception("Broken folder")
 
     def use_database(self, database_name: str):
         """Устанавливает активную базу данных.
         Args:
             database_name (str): Имя базы данных, которую нужно использовать.
         """
-        if database_name not in self._databases:
-            return Status.ERROR
-        result_metadata = self._storage.get_metadata("/")
+        databases = set(self._get_databases()["databases"])
+        if database_name not in databases:
+            raise Exception("Unknown db_name")
         self._current_database = database_name
+        return Status.OK
 
-    def show_database(self) -> List[str]:
-        """Возвращает список всех баз данных.
-        """
-        result_metadata = self._storage.get_metadata("/")
-        return list(self._databases)
+    def show_databases(self) -> dict:
+        """Возвращает список всех баз данных."""
+        return self._get_databases()
 
     def current_database(self):
-        """Возвращает имя текущей активной базы данных.
-        """
+        """Возвращает имя текущей активной базы данных."""
         return self._current_database
+
+    def _form_metadata_dict(self, databases: set) -> dict:
+        """Формирует данные для метадата формата"""
+        return {"databases": list(databases)}
+
+    def _get_databases(self) -> dict:
+        try:
+            return self._storage.get_metadata(path)
+        except FileNotFoundError:
+            return {"databases": []}

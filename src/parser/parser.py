@@ -1,22 +1,36 @@
-from typing import Any
+from dataclasses import dataclass
 from typing import Callable
 import re
+
+from tabulate import tabulate
 
 from exceptions.SQLSyntaxError import (
     WrongParametersError,
     UnknownCommandError,
     SQLSyntaxError,
 )
-from parser.constants import TopLevelApi, commands_data, TypesEnum
+from parser.constants import (
+    TopLevelApi,
+    commands_data,
+    TypesEnum,
+)
+from enum_status import Status
+
+
+@dataclass
+class ApiResult:
+    status: Status
+    message: str = ""
 
 
 class Parser:
     commands = {}
 
-    api: TopLevelApi
-
     def __init__(self):
-        self.api = TopLevelApi()
+        self.top_level_api = TopLevelApi()
+
+    def get_current_db(self):
+        return self.top_level_api.get_current_db()
 
     def parse_input(self, user_input: list[str]) -> None:  # pragma: no cover
         """Принимает ввод от пользователя и разбивает одну большую команду на под-команды и выполняет каждую команду последовательно
@@ -43,7 +57,7 @@ class Parser:
         user_input = [item.strip() for item in user_input if item]
         for item in user_input:
             try:
-                print(self._parse_command(item))
+                print(self._form_output(self._parse_command(item)))
             except SQLSyntaxError as e:
                 print(e)
 
@@ -66,7 +80,7 @@ class Parser:
                 method_fields.pop("return", 0)
                 values = None
                 if value.pattern is None:
-                    return value.method(self.api)
+                    return value.method(self.top_level_api)
                 else:
                     values = []
                     match = re.fullmatch(pattern=value.pattern, string=command)
@@ -82,8 +96,31 @@ class Parser:
                                 field_value=field_value, field_type=field_type
                             )
                         )
-                    return value.method(self.api, *values)
+                    return value.method(self.top_level_api, *values)
         raise UnknownCommandError("Unknown command\nUse help command in this terminal")
+
+    def _form_output(self, result: str | dict | list[dict], header=None) -> str:
+        if isinstance(result, str):
+            return result
+        elif isinstance(result, dict):
+            strokes = []
+            if len(result) == 1 and isinstance(list(result.values())[0], list):
+                header = [list(result.keys())[0]]
+                for item in list(result.values())[0]:
+                    strokes.append([item])
+            else:
+                for key, value in result.items():
+                    header = ["field", "type"]
+                    strokes.append([key, value])
+            output = tabulate(strokes, headers=header, tablefmt="grid")
+            return output
+        elif isinstance(result, list) and len(result) > 0:
+            header = list(result[0].keys())
+            table_value = []
+            for value in result:
+                table_value.append(list(value.values()))
+            output = tabulate(table_value, headers=header, tablefmt="grid")
+            return output
 
     def _parse_field(
         self, field_value: str, field_type: type
@@ -123,6 +160,8 @@ def _parse_tuple_string(tuple_string: str) -> tuple:
         if delimeter in tuple_string:
             result = tuple_string.split(delimeter)
             result = [item.strip() for item in result if item]
+            result = tuple(result)
+            return result
     return (result,)
 
 
@@ -150,8 +189,6 @@ def _parse_dict_string(dict_string: str) -> dict:
                 pair = [item.strip() for item in pair if item]
                 key = pair[0]
                 value = pair[1]
-                if delimeter == ":" and pair[1].upper() in TypesEnum._member_names_:
-                    value = TypesEnum[value.upper()].value
                 result[key] = value
     return result
 
@@ -167,7 +204,7 @@ def _parse_list_string(list_string: str) -> list:
         list: Список элементов
     """
     result = []
-    pattern = r"(\w+\,?\s*\w*)"
+    pattern = r"(\w+(?:\,?\s*\w*)*)"
     groups = re.findall(pattern=pattern, string=list_string)
     for item in groups:
         if "," in item:
