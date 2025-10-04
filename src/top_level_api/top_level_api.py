@@ -165,13 +165,15 @@ class TopLevelApi:
                 message=f"Ошибка при удалении индекса: {str(e)}",
             )
 
-    def insert(self, table_name: str, fields: tuple, values: list[Any]) -> ApiResult:
+    def insert(self, table_name: str, fields: tuple, values: list) -> ApiResult:
         """Вставляет запись - делегирует низкоуровневому Table"""
         try:
-            print(fields, values)
-            print(type(fields), type(values))
-            result = self.table.insert(db_name=self.db_manager.current_database(), 
-                                       table_name=table_name, fields=fields, values=values)
+            result = self.table.insert(
+                db_name=self.db_manager.current_database(),
+                table_name=table_name,
+                fields=fields,
+                values=values,
+            )
             return ApiResult(status=Status.OK, message=str(result))
         except Exception as e:
             return ApiResult(
@@ -181,11 +183,15 @@ class TopLevelApi:
     def select(self, columns: tuple, table_name: str, filtered: tuple = None):
         """Выбирает записи - делегирует низкоуровневому Table"""
         try:
-            print(f"{columns}, {filtered}")
-            result = self.table.select(db_name=self.db_manager.current_database(), 
-                                       columns=columns, table_name=table_name, 
-                                       conditions=filtered)
-            return ApiResult(status=Status.OK, message=result)
+            if columns[0] == "*":
+                columns = None
+            result = self.table.select(
+                db_name=self.db_manager.current_database(),
+                columns=columns,
+                table_name=table_name,
+                conditions=filtered,
+            )
+            return result
         except Exception as e:
             return ApiResult(
                 status=Status.ERROR, message=f"Ошибка при выборке данных: {str(e)}"
@@ -196,9 +202,12 @@ class TopLevelApi:
     ) -> ApiResult:
         """Обновляет записи - делегирует низкоуровневому Table"""
         try:
-            result = self.table.update(db_name=self.db_manager.current_database(),
-                                       table_name=table_name, new_data=fields, 
-                                       conditions=filtered)
+            result = self.table.update(
+                db_name=self.db_manager.current_database(),
+                table_name=table_name,
+                new_data=fields,
+                conditions=filtered,
+            )
             return ApiResult(status=Status.OK, message=result)
         except Exception as e:
             return ApiResult(
@@ -208,8 +217,11 @@ class TopLevelApi:
     def delete_from(self, table_name: str, filtered: tuple = None) -> ApiResult:
         """Удаляет записи - делегирует низкоуровневому Table"""
         try:
-            result = self.table.delete(db_name=self.db_manager.current_database(),
-                                       table_name=table_name, conditions=filtered)
+            result = self.table.delete(
+                db_name=self.db_manager.current_database(),
+                table_name=table_name,
+                conditions=filtered,
+            )
             return ApiResult(status=Status.OK, message=str(result))
         except Exception as e:
             return ApiResult(

@@ -114,8 +114,13 @@ class Parser:
                     strokes.append([key, value])
             output = tabulate(strokes, headers=header, tablefmt="grid")
             return output
-        elif isinstance(result, list):
-            pass
+        elif isinstance(result, list) and len(result) > 0:
+            header = list(result[0].keys())
+            table_value = []
+            for value in result:
+                table_value.append(list(value.values()))
+            output = tabulate(table_value, headers=header, tablefmt="grid")
+            return output
 
     def _parse_field(
         self, field_value: str, field_type: type
@@ -155,6 +160,8 @@ def _parse_tuple_string(tuple_string: str) -> tuple:
         if delimeter in tuple_string:
             result = tuple_string.split(delimeter)
             result = [item.strip() for item in result if item]
+            result = tuple(result)
+            return result
     return (result,)
 
 
@@ -197,7 +204,7 @@ def _parse_list_string(list_string: str) -> list:
         list: Список элементов
     """
     result = []
-    pattern = r"(\w+\,?\s*\w*)"
+    pattern = r"(\w+(?:\,?\s*\w*)*)"
     groups = re.findall(pattern=pattern, string=list_string)
     for item in groups:
         if "," in item:

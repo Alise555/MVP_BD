@@ -59,22 +59,22 @@ commands_data: dict[str, CommandInfo] = {
     "show databases": CommandInfo(
         None, TopLevelApi.show_databases, USAGE_BASE + "SHOW DATABASES <db_name>"
     ),
-    "add column": CommandInfo(
-        r"alter\s+table\s+(\w*)\s+add\s+column\s+(\w*\s*:\s*\w*)",
-        TopLevelApi.add_column,
-        USAGE_BASE + "ALTER TABLE <table_name> ADD COLUMN <column_name>:<column_type>",
-    ),
-    "drop column": CommandInfo(
-        r"alter\s+table\s+(\w*)\s+drop\s+column\s+(\w*)",
-        TopLevelApi.drop_column,
-        USAGE_BASE + "ALTER TABLE <table_name> DROP COLUMN <column_name>",
-    ),
-    "modify column": CommandInfo(
-        r"alter\s+table\s+(\w*)\s+modify\s+column\s+(\w*)\s+(\w*\s*:\s*\w*)",
-        TopLevelApi.modify_column,
-        USAGE_BASE
-        + "ALTER TABLE <table_name> MODIFY COLUMN <old_column_name> <new_column_name>:<new_column_type>",
-    ),
+    # "add column": CommandInfo(
+    #     r"alter\s+table\s+(\w*)\s+add\s+column\s+(\w*\s*:\s*\w*)",
+    #     TopLevelApi.add_column,
+    #     USAGE_BASE + "ALTER TABLE <table_name> ADD COLUMN <column_name>:<column_type>",
+    # ),
+    # "drop column": CommandInfo(
+    #     r"alter\s+table\s+(\w*)\s+drop\s+column\s+(\w*)",
+    #     TopLevelApi.drop_column,
+    #     USAGE_BASE + "ALTER TABLE <table_name> DROP COLUMN <column_name>",
+    # ),
+    # "modify column": CommandInfo(
+    #     r"alter\s+table\s+(\w*)\s+modify\s+column\s+(\w*)\s+(\w*\s*:\s*\w*)",
+    #     TopLevelApi.modify_column,
+    #     USAGE_BASE
+    #     + "ALTER TABLE <table_name> MODIFY COLUMN <old_column_name> <new_column_name>:<new_column_type>",
+    # ),
     "update": CommandInfo(
         r"update\s*(\w+)\s*set\s*(\w+=\w+(?:\,{1}\s*\w+\s*=\s*\w+|\d+)*)(?:\s*where\s*(\w+[!=><]+\w+|\d+))?",
         TopLevelApi.update,
@@ -94,7 +94,7 @@ commands_data: dict[str, CommandInfo] = {
         + "DELETE FROM <table_name> (WHERE <column_name> == <value> AND ...)",
     ),
     "insert": CommandInfo(
-        r"insert\s+into\s+(\w+)\s*(\(\w+(?:\s*\,{1}\s*\w*)?\))\s+values\s*((?:\,?\s*\((?:\w+|d+){1}(?:\,{1}\s*(?:\w+|\d+))*\))*)",
+        r"insert\s+into\s+(\w+)\s*(\(\w+(?:\s*\,{1}\s*\w*)*\))\s+values\s*((?:\,?\s*\((?:\w+|d+){1}(?:\,{1}\s*(?:\w+|\d+))*\))*)",
         TopLevelApi.insert,
         USAGE_BASE
         + "INSERT INTO <table_name> (<field>, <field>) VALUES (<value>, <value>), (<value>, <value>)",

@@ -202,15 +202,25 @@ class Storage:
                 pickle.dump(item, f)
             self.write_offsets(offsets, table_path)
 
-    def read_data(self, table_path: str):
-        data = []
+    def write_item(self, data: dict, table_path: str) -> int:
+        data_path = os.path.join(table_path, data_name)
+        with open(data_path, "ab") as f:
+            offset = f.tell()
+            pickle.dump(data, f)
+            return offset
+
+    def read_data(self, table_path: str) -> tuple[dict, str]:
         data_path = os.path.join(table_path, data_name)
         offsets = self.read_offsets(table_path)
         with open(data_path, "rb") as f:
             for offset in offsets:
                 f.seek(offset)
-                data.append(pickle.load(f))
-        return data
+                yield (pickle.load(f), offset)
+
+    def delete_data(self, offset: str, table_path: str) -> None:
+        offsets = self.read_offsets(table_path)
+        offsets.remove(offset)
+        self.write_offsets(offsets, table_path)
 
     def write_offsets(self, offsets: list[int], table_path: str):
         offset_path = os.path.join(table_path, offset_name)
@@ -225,3 +235,10 @@ class Storage:
                 return json.load(f)["offsets"]
         except FileNotFoundError:
             return []
+
+    def update_data(self, offset: str, data: dict, table_path: str):
+        new_offset = self.write_item(data, table_path)
+        offsets = self.read_offsets(table_path)
+        old_index = offsets.index(offset)
+        offsets[old_index] = new_offset
+        self.write_offsets(offsets, table_path)

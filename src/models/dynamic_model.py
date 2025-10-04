@@ -1,10 +1,11 @@
-from pydantic import BaseModel, create_model, Field
+from pydantic import BaseModel, create_model, Field, ConfigDict
 from typing import Any, Type, Dict
 
 
 def create_dynamic_model(
     conditions: Dict[str, Any],
-    model_name: str = "BaseModel"
+    model_name: str = "BaseModel",
+    strict: bool = False,
 ) -> Type[BaseModel]:
     """
     Создаёт динамическую Pydantic-модель на основе данных или заданных типов.
@@ -36,8 +37,8 @@ def create_dynamic_model(
         else:
             fields[field_name] = (config, Field())
 
-    dynamic_model = create_model(model_name, **fields)
+    dynamic_model = create_model(
+        model_name, **fields, __config__=ConfigDict(extra="forbid") if strict else None
+    )
 
     return dynamic_model
-
-

@@ -4,6 +4,8 @@ from table.container import Container
 from storage.storage import Storage
 from config.config import path, metadata_name
 from models.dynamic_model import create_dynamic_model
+from pydantic_core import ValidationError
+from enum_status import Status
 
 
 class Table(Container):
@@ -38,81 +40,81 @@ class Table(Container):
     #     """Проверить, пуста ли таблица."""
     #     return len(self.data) == 0
 
-    def add_column(
-        self, db_name: str, table_name, column_name: str, data_type: str
-    ) -> bool:
-        """
-        Добавить колонку в таблицу.
+    # def add_column(
+    #     self, db_name: str, table_name, column_name: str, data_type: str
+    # ) -> bool:
+    #     """
+    #     Добавить колонку в таблицу.
 
-        Args:
-            column_name (str): Имя колонки
-            data_type (str): Тип данных колонки
+    #     Args:
+    #         column_name (str): Имя колонки
+    #         data_type (str): Тип данных колонки
 
-        Returns:
-            bool: True если успешно, False если ошибка
-        """
-        try:
-            columns_metadata = self._load_table_data(
-                db_name=db_name, table_name=table_name
-            )
-            # Проверяем, существует ли уже колонка
-            if column_name in columns_metadata:
-                print(f"Ошибка: Колонка '{column_name}' уже существует")
-                return False
+    #     Returns:
+    #         bool: True если успешно, False если ошибка
+    #     """
+    #     try:
+    #         columns_metadata = self._load_table_data(
+    #             db_name=db_name, table_name=table_name
+    #         )
+    #         # Проверяем, существует ли уже колонка
+    #         if column_name in columns_metadata:
+    #             print(f"Ошибка: Колонка '{column_name}' уже существует")
+    #             return False
 
-            print(f"Добавление колонки '{column_name}' типа '{data_type}'")
+    #         print(f"Добавление колонки '{column_name}' типа '{data_type}'")
 
-            # 1. Добавляем колонку в метаданные
-            columns_metadata[column_name] = data_type
+    #         # 1. Добавляем колонку в метаданные
+    #         columns_metadata[column_name] = data_type
 
-            # 2. Добавляем значение по умолчанию к каждой существующей строке
-            default_value = self._get_default_value(data_type)
-            for row in self.data:
-                row.append(default_value)
+    #         # 2. Добавляем значение по умолчанию к каждой существующей строке
+    #         default_value = self._get_default_value(data_type)
+    #         for row in self.data:
+    #             row.append(default_value)
 
-            # 3. Сохраняем изменения через Storage
-            self.storage.update_metadata(columns_metadata)
-            #     self.storage.update_data_file(self.data) нужно продумать функционал обновления данных
+    #         # 3. Сохраняем изменения через Storage
+    #         self.storage.update_metadata(columns_metadata)
+    #         #     self.storage.update_data_file(self.data) нужно продумать функционал обновления данных
 
-            print(f"Колонка '{column_name}' успешно добавлена")
-            return True
+    #         print(f"Колонка '{column_name}' успешно добавлена")
+    #         return True
 
-        except Exception as e:
-            print(f"Ошибка при добавлении колонки: {e}")
-            return False
+    #     except Exception as e:
+    #         print(f"Ошибка при добавлении колонки: {e}")
+    #         return False
 
-    def modify_column(
-        self,
-        db_name: str,
-        table_name: str,
-        old_column_name: str,
-        new_column_name: str,
-        new_data_type: Optional[str] = None,
-    ) -> bool:
-        """
-        Изменить колонку в таблице.
+    # def modify_column(
+    #     self,
+    #     db_name: str,
+    #     table_name: str,
+    #     old_column_name: str,
+    #     new_column_name: str,
+    #     new_data_type: Optional[str] = None,
+    # ) -> bool:
+    #     """
+    #     Изменить колонку в таблице.
 
-        Args:
-            old_column_name (str): Текущее имя колонки
-            new_column_name (str): Новое имя колонки
-            new_data_type (str, optional): Новый тип данных
+    #     Args:
+    #         old_column_name (str): Текущее имя колонки
+    #         new_column_name (str): Новое имя колонки
+    #         new_data_type (str, optional): Новый тип данных
 
-        Returns:
-            bool: True если успешно, False если ошибка
-        """
-        pass
+    #     Returns:
+    #         bool: True если успешно, False если ошибка
+    #     """
+    #     pass
 
-    def drop_column(self, column_name: str) -> bool:
-        """
-        Удалить колонку из таблицы.
+    # def drop_column(self, column_name: str) -> bool:
+    #     """
+    #     Удалить колонку из таблицы.
 
-        Args:
-            column_name (str): Имя колонки для удаления
+    #     Args:
+    #         column_name (str): Имя колонки для удаления
 
-        Returns:
-            bool: True если успешно, False если ошибка
-        """
-        pass
+    #     Returns:
+    #         bool: True если успешно, False если ошибка
+    #     """
+    #     pass
 
     def _get_default_value(self, data_type: str) -> Any:
         """Возвращает значение по умолчанию для типа данных"""
@@ -127,7 +129,9 @@ class Table(Container):
             return converter(value)
         return value
 
-    def insert(self, db_name: str, table_name: str, fields: Tuple[str], values: List[str]) -> bool:
+    def insert(
+        self, db_name: str, table_name: str, fields: Tuple[str], values: List[str]
+    ) -> bool:
         """
         Вставить запись в таблицу.
 
@@ -140,15 +144,18 @@ class Table(Container):
         """
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
-        structure_path = os.path.join(db_path, metadata_name)
         try:
-            table_structure = self.storage.get_metadata(structure_path)
-            PydanticModel = create_dynamic_model(conditions=table_structure)
-            print(PydanticModel.__annotations__)
-            data = [dict(zip(fields[0], item)) for item in values]
-            if all(PydanticModel.model_validate(d) for d in data):
-                self.storage.write_data(table_path=table_path, data=data)
-                return True
+            table_structure = self.storage.get_metadata(table_path)
+            PydanticModel = create_dynamic_model(
+                conditions=table_structure, strict=True
+            )
+            data = [dict(zip(fields, item)) for item in values]
+            for item in data:
+                if PydanticModel.model_validate(item):
+                    self.storage.write_data(table_path=table_path, data=[item])
+            return Status.OK
+        except ValidationError as e:
+            print(f"Allowed only {table_structure} fields!\n{e}")
         except Exception as e:
             print(f"Error: {e}")
             return False
@@ -172,27 +179,32 @@ class Table(Container):
         """
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
-        full_data = self.storage.read_data(table_path)
-        filtered_data = []
-        if conditions:
-            for row in full_data:
-                match = check_conditions(conditions=conditions, row=row)
-                if match:
-                    filtered_data.append(row)
-
-        data = filtered_data if conditions else full_data
-
-        if columns:
-            return [{key: row[key] for key in columns if key in row} for row in data]
-        print(f"Выбор колонок: {columns}, условия: {conditions}")
-        return filtered_data
+        table_structure = self.storage.get_metadata(table_path)
+        PydanticModel = create_dynamic_model(conditions=table_structure)
+        new_data = []
+        for item, offset in self.storage.read_data(table_path):
+            if PydanticModel.model_validate(item):
+                if conditions:
+                    if check_conditions(conditions, item) is False:
+                        continue
+                if columns:
+                    new_dict = {}
+                    for column in columns:
+                        try:
+                            new_dict[column] = item[column]
+                        except KeyError as e:
+                            raise Exception(f"Unknown field {column}")
+                    new_data.append(new_dict)
+                else:
+                    new_data.append(item)
+        return new_data
 
     def update(
-        self, 
-        new_data: Dict[str, Any], 
+        self,
+        new_data: Dict[str, Any],
         db_name: str,
         table_name: str,
-        conditions: Optional[Tuple[str]] = None
+        conditions: Optional[Tuple[str]] = None,
     ) -> int:
         """
         Обновить данные в таблице.
@@ -206,34 +218,20 @@ class Table(Container):
         """
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
-        structure_path = os.path.join(db_path, metadata_name)
-
-        updated_rows = 0
-        table_structure = self.storage.get_metadata(structure_path)
+        table_structure = self.storage.get_metadata(table_path)
         PydanticModel = create_dynamic_model(conditions=table_structure)
+        for item, offset in self.storage.read_data(table_path):
+            for key, value in new_data.items():
+                if item.get(key, None) is not None:
+                    item[key] = value
+            if PydanticModel.model_validate(item):
+                if conditions:
+                    if check_conditions(conditions, item) is False:
+                        continue
+                self.storage.update_data(offset, item, table_path)
+        return Status.OK
 
-        full_data = self.storage.read_data(table_path)
-        for row in full_data:
-            match = True
-            if conditions:
-                # Проверяем, подходит ли строка под условия (если условия есть)
-                match = check_conditions(conditions=conditions, row=row)
-
-            if match:
-                row.update(new_data)  # Обновляем только разрешённые поля
-                try:
-                    if PydanticModel(**row):
-                        updated_rows += 1
-                except Exception as e:
-                    print(f"Новые данные введены с ошибкой. Проверьте условия: {e}")
-        if updated_rows > 0:
-            self.storage.update_data_file(path, full_data)
-            self.storage.update_data_file(path, full_data)
-        print(f"Обновление данных: {new_data}, условия: {conditions} ")
-        return updated_rows
-
-    def delete(self, db_name: str, table_name: str, 
-               conditions: Tuple[str]) -> int:
+    def delete(self, db_name: str, table_name: str, conditions: Tuple[str]) -> int:
         """
         Удалить данные из таблицы.
 
@@ -247,21 +245,12 @@ class Table(Container):
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
 
-        full_data = self.storage.read_data(table_path)
-        remaining_data = []
-        delete_rows = 0
-
-        for row in full_data:
-            match = True
+        for item, offset in self.storage.read_data(table_path):
             if conditions:
-                match = match = check_conditions(conditions=conditions, row=row)
-            if match:
-                delete_rows += 1
-            else:
-                remaining_data.append(row)
-        # Сохраняем оставшиеся данные обратно в хранилище
-        self.storage.update_data_file(table_path, remaining_data)
-        return delete_rows
+                if check_conditions(conditions, item) is False:
+                    continue
+            self.storage.delete_data(offset, table_path)
+        return Status.OK
 
     def show_structure(self) -> None:
         """Показать структуру таблицы (для отладки)"""
@@ -277,7 +266,7 @@ class Table(Container):
 def parse_condition(condition_str: str) -> tuple:
     """Разбирает строку условия на столбец, оператор и значение."""
     # Определяем оператор (первый из доступных в строке)
-    operators = ['>=', '<=', '!=', '=', '>', '<']
+    operators = [">=", "<=", "!=", "=", ">", "<"]
     operator = None
     for op in operators:
         if op in condition_str:
@@ -307,25 +296,26 @@ def check_conditions(conditions: tuple, row: dict) -> bool:
     match = True
     for condition_str in conditions:
         column, operator, value = parse_condition(condition_str)
-        row_value = row.get(column)
+        row_value = str(row.get(column))
+        value = str(value)
 
         # Проверяем условие
-        if operator == '=' and row_value != value:
+        if operator == "=" and not row_value == value:
             match = False
             break
-        elif operator == '>' and not (row_value > value):
+        elif operator == ">" and not (row_value > value):
             match = False
             break
-        elif operator == '<' and not (row_value < value):
+        elif operator == "<" and not (row_value < value):
             match = False
             break
-        elif operator == '>=' and not (row_value >= value):
+        elif operator == ">=" and not (row_value >= value):
             match = False
             break
-        elif operator == '<=' and not (row_value <= value):
+        elif operator == "<=" and not (row_value <= value):
             match = False
             break
-        elif operator == '!=' and not (row_value != value):
+        elif operator == "!=" and not (row_value != value):
             match = False
             break
     return match
