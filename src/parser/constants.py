@@ -16,12 +16,12 @@ commands_data: dict[str, CommandInfo] = {
     "create table": CommandInfo(
         r"create\s+table\s+(\w+)\s*(\((?:\w*\:\s*\w*\,?\s*)*\))",
         TopLevelApi.create_table,
-        USAGE_BASE + "CREATE TABLE <table_name> (<field_name>:<field_type>, ...)",
+        USAGE_BASE + "CREATE TABLE <table_name> (<field_name>:<field_type>, ...);",
     ),
     "drop table": CommandInfo(
         r"drop\s+table\s+(\w*)",
         TopLevelApi.drop_table,
-        USAGE_BASE + "DROP TABLE <table_name>",
+        USAGE_BASE + "DROP TABLE <table_name>;",
     ),
     # "truncate table": CommandInfo(
     #     r"truncate\s+table\s+(\w*)",
@@ -31,33 +31,33 @@ commands_data: dict[str, CommandInfo] = {
     "describe table": CommandInfo(
         r"describe\s+table\s+(\w*)",
         TopLevelApi.describe_table,
-        USAGE_BASE + "DESCRIBE TABLE <table_name>",
+        USAGE_BASE + "DESCRIBE TABLE <table_name>;",
     ),
     "show tables": CommandInfo(
-        None, TopLevelApi.show_tables, USAGE_BASE + "SHOW TABLES"
+        None, TopLevelApi.show_tables, USAGE_BASE + "SHOW TABLES;"
     ),
     "create database": CommandInfo(
         r"create\s+database\s+(\w*)",
         TopLevelApi.create_database,
-        USAGE_BASE + "CREATE DATABASE <db_name>",
+        USAGE_BASE + "CREATE DATABASE <db_name>;",
     ),
     "update database": CommandInfo(
         r"update\s+database\s+(\w*)\s+(\w+)",
         TopLevelApi.update_database,
-        USAGE_BASE + "UPDATE DATABASE <old_db_name> <new_db_name>",
+        USAGE_BASE + "UPDATE DATABASE <old_db_name> <new_db_name>;",
     ),
     "use database": CommandInfo(
         r"use\s+database\s+(\w*)",
         TopLevelApi.use_database,
-        USAGE_BASE + "USE DATABASE <db_name>",
+        USAGE_BASE + "USE DATABASE <db_name>;",
     ),
     "drop database": CommandInfo(
         r"drop\s+database\s+(\w*)",
         TopLevelApi.drop_database,
-        USAGE_BASE + "DROP DATABASE <db_name>",
+        USAGE_BASE + "DROP DATABASE <db_name>;",
     ),
     "show databases": CommandInfo(
-        None, TopLevelApi.show_databases, USAGE_BASE + "SHOW DATABASES <db_name>"
+        None, TopLevelApi.show_databases, USAGE_BASE + "SHOW DATABASES <db_name>;"
     ),
     # "add column": CommandInfo(
     #     r"alter\s+table\s+(\w*)\s+add\s+column\s+(\w*\s*:\s*\w*)",
@@ -79,25 +79,25 @@ commands_data: dict[str, CommandInfo] = {
         r"update\s*(\w+)\s*set\s*(\w+=\w+(?:\,{1}\s*\w+\s*=\s*\w+|\d+)*)(?:\s*where\s*(\w+[!=><]+\w+|\d+))?",
         TopLevelApi.update,
         USAGE_BASE
-        + "UPDATE <table_name> SET <column_name>=<value> (WHERE <column_name> == <value> AND ...)",
+        + "UPDATE <table_name> SET <column_name>=<value> WHERE <column_name> = <value> AND ...;",
     ),
     "select": CommandInfo(
         r"select\s+(?:(\*{1}|\w+(?:\,\s*\w+)*)?)\s+from\s+(\w+)(?:\s+where\s+(\w+[!=><]+(?:\d|\w+)(?:\s+and\s+\w+\s*[!=><]+\s*(?:\d+|\w+))*)?)?",
         TopLevelApi.select,
         USAGE_BASE
-        + "SELECT <fields> (or *) FROM <table_name> (WHERE <column_name> == <value> AND ...)",
+        + "SELECT <fields> (or *) FROM <table_name> WHERE <column_name> = <value> AND ...;",
     ),
     "delete": CommandInfo(
         r"delete\s+from\s+(\w+)(?:\s+where\s+(\w+[!=><]+(?:\d|\w+)(?:\s+and\s+\w+\s*[!=><]+\s*(?:\d+|\w+))*)?)?",
         TopLevelApi.delete_from,
         USAGE_BASE
-        + "DELETE FROM <table_name> (WHERE <column_name> == <value> AND ...)",
+        + "DELETE FROM <table_name> WHERE <column_name> = <value> AND ...;",
     ),
     "insert": CommandInfo(
         r"insert\s+into\s+(\w+)\s*(\(\w+(?:\s*\,{1}\s*\w*)*\))\s+values\s*((?:\,?\s*\((?:\w+|d+){1}(?:\,{1}\s*(?:\w+|\d+))*\))*)",
         TopLevelApi.insert,
         USAGE_BASE
-        + "INSERT INTO <table_name> (<field>, <field>) VALUES (<value>, <value>), (<value>, <value>)",
+        + "INSERT INTO <table_name> (<field>, <field>) VALUES (<value>, <value>), (<value>, <value>);",
     ),
 }
 
