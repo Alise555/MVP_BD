@@ -91,7 +91,8 @@ class TopLevelApi:
     def show_databases(self) -> ShowDataBases:
         """Возвращает список всех баз данных."""
         try:
-            return self.db_manager.show_databases()
+            result = self.db_manager.show_databases()
+            return result
         except Exception as e:
             return f"{Status.ERROR}\nОшибка при получении списка БД: {str(e)}"
 
@@ -114,9 +115,12 @@ class TopLevelApi:
     def add_column(self, table_name: str, column_data: dict) -> ApiResult:
         """Добавляет колонку - делегирует низкоуровневому Table"""
         try:
-            result = self.table.add_column(table_name, column_data)
-            return ApiResult(status=Status.OK, message=result)
+            result = self.table.add_column(
+                self.db_manager.current_database(), table_name, column_data
+            )
+            return result
         except Exception as e:
+            print(e)
             return (f"{Status.ERROR}\nОшибка при добавлении колонки: {str(e)}",)
 
     def modify_column(
@@ -134,8 +138,12 @@ class TopLevelApi:
     def drop_column(self, table_name: str, column_name: str) -> ApiResult:
         """Удаляет колонку - делегирует низкоуровневому Table"""
         try:
-            return self.table.drop_column(table_name, column_name)
+            result = self.table.drop_column(
+                self.db_manager.current_database(), table_name, column_name
+            )
+            return result
         except Exception as e:
+            print(e)
             return ApiResult(
                 status=Status.ERROR,
                 message=f"Ошибка при удалении колонки: {str(e)}",
@@ -147,7 +155,7 @@ class TopLevelApi:
         """Создает индекс - делегирует низкоуровневому Table"""
         try:
             result = self.table.create_index(table_name, index_name, index_struct)
-            return ApiResult(status=Status.OK, message=result)
+            return Status.OK
         except Exception as e:
             return ApiResult(
                 status=Status.ERROR,
@@ -158,7 +166,7 @@ class TopLevelApi:
         """Удаляет индекс - делегирует низкоуровневому Table"""
         try:
             result = self.table.drop_index(table_name, index_name)
-            return ApiResult(status=Status.OK, message=result)
+            return Status.OK
         except Exception as e:
             return ApiResult(
                 status=Status.ERROR,
@@ -174,7 +182,7 @@ class TopLevelApi:
                 fields=fields,
                 values=values,
             )
-            return ApiResult(status=Status.OK, message=str(result))
+            return result
         except Exception as e:
             return ApiResult(
                 status=Status.ERROR, message=f"Ошибка при вставке данных: {str(e)}"
@@ -193,6 +201,7 @@ class TopLevelApi:
             )
             return result
         except Exception as e:
+            print(e)
             return ApiResult(
                 status=Status.ERROR, message=f"Ошибка при выборке данных: {str(e)}"
             )
@@ -208,7 +217,7 @@ class TopLevelApi:
                 new_data=fields,
                 conditions=filtered,
             )
-            return ApiResult(status=Status.OK, message=result)
+            return result
         except Exception as e:
             return ApiResult(
                 status=Status.ERROR, message=f"Ошибка при обновлении данных: {str(e)}"
@@ -222,7 +231,7 @@ class TopLevelApi:
                 table_name=table_name,
                 conditions=filtered,
             )
-            return ApiResult(status=Status.OK, message=str(result))
+            return result
         except Exception as e:
             return ApiResult(
                 status=Status.ERROR, message=f"Ошибка при удалении данных: {str(e)}"

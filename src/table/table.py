@@ -5,6 +5,7 @@ from storage.storage import Storage
 from config.config import path, metadata_name
 from models.dynamic_model import create_dynamic_model
 from pydantic_core import ValidationError
+from pydantic import BaseModel
 from enum_status import Status
 
 
@@ -28,60 +29,49 @@ class Table(Container):
         """Загрузка начальных данных из Storage"""
         return self.storage.get_metadata(os.path.join(path, db_name, table_name))
 
-    # def get_name(self) -> str:
-    #     """Получить имя таблицы."""
-    #     return self.name
+    def add_column(self, db_name: str, table_name, columns: dict) -> bool:
+        """
+        Добавить колонку в таблицу.
 
-    # def get_size(self) -> int:
-    #     """Получить количество записей в таблице."""
-    #     return len(self.data)
+        Args:
+            column_name (str): Имя колонки
+            data_type (str): Тип данных колонки
 
-    # def is_empty(self) -> bool:
-    #     """Проверить, пуста ли таблица."""
-    #     return len(self.data) == 0
+        Returns:
+            bool: True если успешно, False если ошибка
+        """
+        try:
+            columns_data = self.get_fields_structure(db_name, table_name)
+            for column_name, data_type in columns.items():
+                columns_data[column_name] = data_type
+            self.update_fields_metadata(columns_data, db_name, table_name)
+        except Exception as e:
+            print(f"Ошибка при добавлении колонки: {e}")
+            return False
 
-    # def add_column(
-    #     self, db_name: str, table_name, column_name: str, data_type: str
-    # ) -> bool:
-    #     """
-    #     Добавить колонку в таблицу.
+    def drop_column(self, db_name: str, table_name: str, column_name: str) -> bool:
+        """
+        Удалить колонку из таблицы.
 
-    #     Args:
-    #         column_name (str): Имя колонки
-    #         data_type (str): Тип данных колонки
+        Args:
+            column_name (str): Имя колонки для удаления
 
-    #     Returns:
-    #         bool: True если успешно, False если ошибка
-    #     """
-    #     try:
-    #         columns_metadata = self._load_table_data(
-    #             db_name=db_name, table_name=table_name
-    #         )
-    #         # Проверяем, существует ли уже колонка
-    #         if column_name in columns_metadata:
-    #             print(f"Ошибка: Колонка '{column_name}' уже существует")
-    #             return False
-
-    #         print(f"Добавление колонки '{column_name}' типа '{data_type}'")
-
-    #         # 1. Добавляем колонку в метаданные
-    #         columns_metadata[column_name] = data_type
-
-    #         # 2. Добавляем значение по умолчанию к каждой существующей строке
-    #         default_value = self._get_default_value(data_type)
-    #         for row in self.data:
-    #             row.append(default_value)
-
-    #         # 3. Сохраняем изменения через Storage
-    #         self.storage.update_metadata(columns_metadata)
-    #         #     self.storage.update_data_file(self.data) нужно продумать функционал обновления данных
-
-    #         print(f"Колонка '{column_name}' успешно добавлена")
-    #         return True
-
-    #     except Exception as e:
-    #         print(f"Ошибка при добавлении колонки: {e}")
-    #         return False
+        Returns:
+            bool: True если успешно, False если ошибка
+        """
+        try:
+            db_path = os.path.join(path, db_name)
+            table_path = os.path.join(db_path, table_name)
+            column_data = self.get_fields_structure(db_name, table_name)
+            if len(column_data) == 1:
+                raise Exception("Can't drop only one column in table")
+            if column_data.get(column_name, None) is not None:
+                del column_data[column_name]
+                self.update_fields_metadata(column_data, db_name, table_name)
+            else:
+                raise Exception("Unknown column")
+        except Exception as e:
+            print(e)
 
     # def modify_column(
     #     self,
@@ -98,18 +88,6 @@ class Table(Container):
     #         old_column_name (str): Текущее имя колонки
     #         new_column_name (str): Новое имя колонки
     #         new_data_type (str, optional): Новый тип данных
-
-    #     Returns:
-    #         bool: True если успешно, False если ошибка
-    #     """
-    #     pass
-
-    # def drop_column(self, column_name: str) -> bool:
-    #     """
-    #     Удалить колонку из таблицы.
-
-    #     Args:
-    #         column_name (str): Имя колонки для удаления
 
     #     Returns:
     #         bool: True если успешно, False если ошибка
@@ -145,14 +123,22 @@ class Table(Container):
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
         try:
-            table_structure = self.storage.get_metadata(table_path)
+            table_structure = self.get_fields_structure(db_name, table_name)
             PydanticModel = create_dynamic_model(
                 conditions=table_structure, strict=True
             )
+            serial = self.get_serial_field(PydanticModel)
             data = [dict(zip(fields, item)) for item in values]
             for item in data:
-                if PydanticModel.model_validate(item):
-                    self.storage.write_data(table_path=table_path, data=[item])
+                last_id = self.get_last_id(db_name, table_name)
+                item[serial] = last_id
+                temp = PydanticModel.model_validate(item)
+                if temp:
+                    self.storage.write_data(
+                        table_path=table_path, data=[temp.model_dump()]
+                    )
+                    self.update_last_id(db_name, table_name, last_id + 1)
+
             return Status.OK
         except ValidationError as e:
             print(f"Allowed only {table_structure} fields!\n{e}")
@@ -179,7 +165,7 @@ class Table(Container):
         """
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
-        table_structure = self.storage.get_metadata(table_path)
+        table_structure = self.get_fields_structure(db_name, table_name)
         PydanticModel = create_dynamic_model(conditions=table_structure)
         new_data = []
         for item, offset in self.storage.read_data(table_path):
@@ -197,6 +183,7 @@ class Table(Container):
                     new_data.append(new_dict)
                 else:
                     new_data.append(item)
+        new_data.append(table_structure)
         return new_data
 
     def update(
@@ -218,7 +205,7 @@ class Table(Container):
         """
         db_path = os.path.join(path, db_name)
         table_path = os.path.join(db_path, table_name)
-        table_structure = self.storage.get_metadata(table_path)
+        table_structure = self.get_fields_structure(db_name, table_name)
         PydanticModel = create_dynamic_model(conditions=table_structure)
         for item, offset in self.storage.read_data(table_path):
             for key, value in new_data.items():
@@ -261,6 +248,34 @@ class Table(Container):
             print("Первые 3 записи:")
             for i, row in enumerate(self.data[:3]):
                 print(f"  {i}: {row}")
+
+    def get_fields_structure(self, db_name: str, table_name: str) -> dict:
+        table_path = os.path.join(path, db_name, table_name)
+        return self.storage.get_metadata(table_path)["fields"]
+
+    def update_fields_metadata(
+        self, metadata: dict, db_name: str, table_name: str
+    ) -> None:
+        table_path = os.path.join(path, db_name, table_name)
+        data = self.storage.get_metadata(table_path)
+        data["fields"] = metadata
+        self.storage.update_metadata(data, metadata)
+
+    def update_last_id(self, db_name: str, table_name: str, last_id: int):
+        table_path = os.path.join(path, db_name, table_name)
+        data = self.storage.get_metadata(table_path)
+        data["last_id"] = last_id
+        self.storage.update_metadata(data, table_path)
+
+    def get_serial_field(self, model: BaseModel):
+        fields = model.model_json_schema()["properties"]
+        for field_name, field_value in fields.items():
+            if field_value["title"] == "SERIAL":
+                return field_name
+
+    def get_last_id(self, db_name: str, table_name: str) -> dict:
+        table_path = os.path.join(path, db_name, table_name)
+        return self.storage.get_metadata(table_path)["last_id"]
 
 
 def parse_condition(condition_str: str) -> tuple:

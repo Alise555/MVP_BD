@@ -33,9 +33,10 @@ class RelationalDB(BaseDB):
             # Создаем директорию
             self._storage.create_folder(folder_path=table_path)
             tables_metadata: dict[str, list] = self.get_tables_metadata(db_name)
+            table_metadata = {"fields": table_struct, "last_id": 1}
             # Создаем метадату
             self._storage.create_metadata(
-                metadata=table_struct, metadata_file_path=table_path
+                metadata=table_metadata, metadata_file_path=table_path
             )
 
             # Создаем путь до файла с данными
@@ -67,7 +68,9 @@ class RelationalDB(BaseDB):
 
             # Создаем путь до метадаты
             metadata_path = os.path.join(table_path)
-            res: dict = self._storage.get_metadata(metadata_file_path=metadata_path)
+            res: dict = self._storage.get_metadata(metadata_file_path=metadata_path)[
+                "fields"
+            ]
             return res
         except Exception as e:
             raise Exception(f"Error describing table {table_name}: {e}")

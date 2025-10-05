@@ -57,7 +57,8 @@ class Parser:
         user_input = [item.strip() for item in user_input if item]
         for item in user_input:
             try:
-                print(self._form_output(self._parse_command(item)))
+                result = self._parse_command(item)
+                print(self._form_output(result))
             except SQLSyntaxError as e:
                 print(e)
 
@@ -115,7 +116,7 @@ class Parser:
             output = tabulate(strokes, headers=header, tablefmt="grid")
             return output
         elif isinstance(result, list) and len(result) > 0:
-            header = list(result[0].keys())
+            header = result.pop()
             table_value = []
             for value in result:
                 table_value.append(list(value.values()))

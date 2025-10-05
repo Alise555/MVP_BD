@@ -28,14 +28,19 @@ def create_dynamic_model(
         Класс динамической Pydantic-модели.
     """
     fields = {}
-
     for field_name, config in conditions.items():
         if isinstance(config, dict):
             field_type = config.pop("type", Any)
             field_info = Field(**config) if config else ...
             fields[field_name] = (field_type, field_info)
         else:
-            fields[field_name] = (config, Field())
+            if config == "serial":
+                fields[field_name] = (
+                    "int",
+                    Field(default=1, strict=True, title="SERIAL"),
+                )
+            else:
+                fields[field_name] = (config, Field(default=None))
 
     dynamic_model = create_model(
         model_name, **fields, __config__=ConfigDict(extra="forbid") if strict else None

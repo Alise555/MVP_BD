@@ -59,16 +59,16 @@ commands_data: dict[str, CommandInfo] = {
     "show databases": CommandInfo(
         None, TopLevelApi.show_databases, USAGE_BASE + "SHOW DATABASES <db_name>;"
     ),
-    # "add column": CommandInfo(
-    #     r"alter\s+table\s+(\w*)\s+add\s+column\s+(\w*\s*:\s*\w*)",
-    #     TopLevelApi.add_column,
-    #     USAGE_BASE + "ALTER TABLE <table_name> ADD COLUMN <column_name>:<column_type>",
-    # ),
-    # "drop column": CommandInfo(
-    #     r"alter\s+table\s+(\w*)\s+drop\s+column\s+(\w*)",
-    #     TopLevelApi.drop_column,
-    #     USAGE_BASE + "ALTER TABLE <table_name> DROP COLUMN <column_name>",
-    # ),
+    "add column": CommandInfo(
+        r"alter\s+table\s+(\w*)\s+add\s+column\s+(\w*\s*:\s*\w*)",
+        TopLevelApi.add_column,
+        USAGE_BASE + "ALTER TABLE <table_name> ADD COLUMN <column_name>:<column_type>",
+    ),
+    "drop column": CommandInfo(
+        r"alter\s+table\s+(\w*)\s+drop\s+column\s+(\w*)",
+        TopLevelApi.drop_column,
+        USAGE_BASE + "ALTER TABLE <table_name> DROP COLUMN <column_name>",
+    ),
     # "modify column": CommandInfo(
     #     r"alter\s+table\s+(\w*)\s+modify\s+column\s+(\w*)\s+(\w*\s*:\s*\w*)",
     #     TopLevelApi.modify_column,
