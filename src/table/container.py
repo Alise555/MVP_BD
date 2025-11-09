@@ -17,32 +17,32 @@ class Container(ABC):
         """
         pass
     
-    @abstractmethod
-    def get_name(self) -> str:
-        """
-        Получить имя контейнера.
+    # @abstractmethod
+    # def get_name(self) -> str:
+    #     """
+    #     Получить имя контейнера.
         
-        Returns:
-            str: Имя контейнера
-        """
-        pass
+    #     Returns:
+    #         str: Имя контейнера
+    #     """
+    #     pass
     
-    @abstractmethod
-    def get_size(self) -> int:
-        """
-        Получить размер контейнера (количество элементов/записей).
+    # @abstractmethod
+    # def get_size(self) -> int:
+    #     """
+    #     Получить размер контейнера (количество элементов/записей).
         
-        Returns:
-            int: Размер контейнера
-        """
-        pass
+    #     Returns:
+    #         int: Размер контейнера
+    #     """
+    #     pass
     
-    @abstractmethod
-    def is_empty(self) -> bool:
-        """
-        Проверить, пуст ли контейнер.
+    # @abstractmethod
+    # def is_empty(self) -> bool:
+    #     """
+    #     Проверить, пуст ли контейнер.
         
-        Returns:
-            bool: True если контейнер пуст
-        """
-        pass
+    #     Returns:
+    #         bool: True если контейнер пуст
+    #     """
+    #     pass
